@@ -57,6 +57,21 @@
 		name = "Short Hair"	  // try to capatilize the names please~
 		icon_state = "hair_a" // you do not need to define _s or _l sub-states, game automatically does this for you
 
+	resomi
+		name = "Resomi Plumage"
+		icon_state = "resomi_default"
+		species_allowed = list("Resomi")
+
+	resomi_ears
+		name = "Resomi Ears"
+		icon_state = "resomi_ears"
+		species_allowed = list("Resomi")
+
+	resomi_excited
+		name = "Resomi Spiky"
+		icon_state = "resomi_spiky"
+		species_allowed = list("Resomi")
+
 	cut
 		name = "Cut Hair"
 		icon_state = "hair_c"
@@ -136,7 +151,6 @@
 		name = "Pompadour"
 		icon_state = "hair_pompadour"
 		gender = MALE
-		species_allowed = list("Human","Unathi")
 
 	quiff
 		name = "Quiff"
@@ -159,7 +173,6 @@
 		name = "Beehive"
 		icon_state = "hair_beehive"
 		gender = FEMALE
-		species_allowed = list("Human","Unathi")
 
 	beehive2
 		name = "Beehive 2"
@@ -400,6 +413,10 @@
 		icon_state = "hair_joestar"
 		gender = MALE
 
+	volaju
+		name = "Volaju"
+		icon_state = "hair_volaju"
+
 	bald
 		name = "Bald"
 		icon_state = "bald"
@@ -558,6 +575,10 @@
 	jensen
 		name = "Adam Jensen Beard"
 		icon_state = "facial_jensen"
+
+	volaju
+		name = "Volaju"
+		icon_state = "facial_volaju"
 
 	dwarf
 		name = "Dwarf Beard"

@@ -24,7 +24,7 @@ var/global/datum/emergency_shuttle_controller/emergency_shuttle
 
 /datum/emergency_shuttle_controller/proc/process()
 	if (wait_for_launch)
-		if (auto_recall && world.time >= auto_recall_time)
+		if (evac && auto_recall && world.time >= auto_recall_time)
 			recall()
 		if (world.time >= launch_time)	//time to launch the shuttle
 			stop_launch_countdown()
@@ -48,7 +48,7 @@ var/global/datum/emergency_shuttle_controller/emergency_shuttle
 			if (evac)
 				emergency_shuttle_docked.Announce("The Emergency Shuttle has docked with the station. You have approximately [round(estimate_launch_time()/60,1)] minutes to board the Emergency Shuttle.")
 			else
-				priority_announcement.Announce("The scheduled Crew Transfer Shuttle has docked with the station. It will depart in approximately [round(emergency_shuttle.estimate_launch_time()/60,1)] minutes.")
+				priority_announcement.Announce("The scheduled Crew Transfer Shuttle to [dock_name] has docked with the station. It will depart in approximately [round(emergency_shuttle.estimate_launch_time()/60,1)] minutes.")
 
 		//arm the escape pods
 		if (evac)
@@ -94,7 +94,7 @@ var/global/datum/emergency_shuttle_controller/emergency_shuttle
 	//reset the shuttle transit time if we need to
 	shuttle.move_time = SHUTTLE_TRANSIT_DURATION
 
-	priority_announcement.Announce("A crew transfer has been scheduled. The shuttle has been called. It will arrive in approximately [round(estimate_arrival_time()/60)] minutes.")
+	priority_announcement.Announce("A crew transfer to [dock_name] has been scheduled. The shuttle has been called. It will arrive in approximately [round(estimate_arrival_time()/60)] minutes.")
 
 //recalls the shuttle
 /datum/emergency_shuttle_controller/proc/recall()
@@ -114,6 +114,8 @@ var/global/datum/emergency_shuttle_controller/emergency_shuttle
 		priority_announcement.Announce("The scheduled crew transfer has been cancelled.")
 
 /datum/emergency_shuttle_controller/proc/can_call()
+	if (!universe.OnShuttleCall(null))
+		return 0
 	if (deny_shuttle)
 		return 0
 	if (shuttle.moving_status != SHUTTLE_IDLE || !shuttle.location)	//must be idle at centcom
@@ -136,9 +138,8 @@ var/global/datum/emergency_shuttle_controller/emergency_shuttle
 
 /datum/emergency_shuttle_controller/proc/get_shuttle_prep_time()
 	// During mutiny rounds, the shuttle takes twice as long.
-	if(ticker && istype(ticker.mode,/datum/game_mode/mutiny))
-		return SHUTTLE_PREPTIME * 3		//15 minutes
-
+	if(ticker && ticker.mode)
+		return SHUTTLE_PREPTIME * ticker.mode.shuttle_delay
 	return SHUTTLE_PREPTIME
 
 
@@ -241,8 +242,8 @@ var/global/datum/emergency_shuttle_controller/emergency_shuttle
 		sleep(speed)
 		step(src, direction)
 		for(var/obj/effect/starender/E in loc)
-			del(src)
-
+			qdel(src)
+			return
 
 /obj/effect/starender
 	invisibility = 101

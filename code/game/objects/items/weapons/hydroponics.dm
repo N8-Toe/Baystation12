@@ -4,7 +4,7 @@
 //uncomment when this is updated to match storage update
 /*
 /obj/item/weapon/seedbag
-	icon = 'icons/obj/hydroponics.dmi'
+	icon = 'icons/obj/hydroponics_machines.dmi'
 	icon_state = "seedbag"
 	name = "Seed Bag"
 	desc = "A small satchel made for organizing seeds."
@@ -42,10 +42,10 @@
 					else
 						S.item_quants[G.name] = 1
 				else
-					user << "\blue The seed bag is full."
+					user << "<span class='warning'>The seed bag is full.</span>"
 					S.updateUsrDialog()
 					return
-			user << "\blue You pick up all the seeds."
+			user << "<span class='notice'>You pick up all the seeds.</span>"
 		else
 			if (S.contents.len < S.capacity)
 				S.contents += src;
@@ -54,7 +54,7 @@
 				else
 					S.item_quants[name] = 1
 			else
-				user << "\blue The seed bag is full."
+				user << "<span class='warning'>The seed bag is full.</span>"
 		S.updateUsrDialog()
 	return
 

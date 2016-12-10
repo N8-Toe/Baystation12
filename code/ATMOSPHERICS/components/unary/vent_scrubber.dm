@@ -17,6 +17,7 @@
 	var/frequency = 1439
 	var/datum/radio_frequency/radio_connection
 
+	var/hibernate = 0 //Do we even process?
 	var/scrubbing = 1 //0 = siphoning, 1 = scrubbing
 	var/list/scrubbing_gas = list("carbon_dioxide")
 
@@ -36,15 +37,15 @@
 
 	icon = null
 	initial_loc = get_area(loc)
-	if (initial_loc.master)
-		initial_loc = initial_loc.master
 	area_uid = initial_loc.uid
 	if (!id_tag)
 		assign_uid()
 		id_tag = num2text(uid)
-	if(ticker && ticker.current_state == 3)//if the game is running
-		src.initialize()
-		src.broadcast_status()
+
+/obj/machinery/atmospherics/unary/vent_scrubber/Destroy()
+	unregister_radio(src, frequency)
+	..()
+
 
 /obj/machinery/atmospherics/unary/vent_scrubber/update_icon(var/safety = 0)
 	if(!check_icon_cache())
@@ -71,7 +72,7 @@
 		var/turf/T = get_turf(src)
 		if(!istype(T))
 			return
-		if(T.intact && node && node.level == 1 && istype(node, /obj/machinery/atmospherics/pipe))
+		if(!T.is_plating() && node && node.level == 1 && istype(node, /obj/machinery/atmospherics/pipe))
 			return
 		else
 			if(node)
@@ -99,6 +100,8 @@
 		"power" = use_power,
 		"scrubbing" = scrubbing,
 		"panic" = panic,
+		"filter_o2" = ("oxygen" in scrubbing_gas),
+		"filter_n2" = ("nitrogen" in scrubbing_gas),
 		"filter_co2" = ("carbon_dioxide" in scrubbing_gas),
 		"filter_phoron" = ("phoron" in scrubbing_gas),
 		"filter_n2o" = ("sleeping_agent" in scrubbing_gas),
@@ -119,12 +122,13 @@
 	radio_filter_out = frequency==initial(frequency)?(RADIO_TO_AIRALARM):null
 	if (frequency)
 		set_frequency(frequency)
+		src.broadcast_status()
 
 /obj/machinery/atmospherics/unary/vent_scrubber/process()
 	..()
 
-	last_power_draw = 0
-	last_flow_rate = 0
+	if (hibernate > world.time)
+		return 1
 
 	if (!node)
 		use_power = 0
@@ -145,6 +149,10 @@
 		var/transfer_moles = min(environment.total_moles, environment.total_moles*MAX_SIPHON_FLOWRATE/environment.volume)	//group_multiplier gets divided out here
 
 		power_draw = pump_gas(src, environment, air_contents, transfer_moles, power_rating)
+
+	if(scrubbing && power_draw <= 0)	//99% of all scrubbers
+		//Fucking hibernate because you ain't doing shit.
+		hibernate = world.time + (rand(100,200))
 
 	if (power_draw >= 0)
 		last_power_draw = power_draw
@@ -171,7 +179,7 @@
 		use_power = !use_power
 
 	if(signal.data["panic_siphon"]) //must be before if("scrubbing" thing
-		panic = text2num(signal.data["panic_siphon"] != null)
+		panic = text2num(signal.data["panic_siphon"])
 		if(panic)
 			use_power = 1
 			scrubbing = 0
@@ -187,10 +195,24 @@
 
 	if(signal.data["scrubbing"] != null)
 		scrubbing = text2num(signal.data["scrubbing"])
+		if(scrubbing)
+			panic = 0
 	if(signal.data["toggle_scrubbing"])
 		scrubbing = !scrubbing
+		if(scrubbing)
+			panic = 0
 
 	var/list/toggle = list()
+
+	if(!isnull(signal.data["o2_scrub"]) && text2num(signal.data["o2_scrub"]) != ("oxygen" in scrubbing_gas))
+		toggle += "oxygen"
+	else if(signal.data["toggle_o2_scrub"])
+		toggle += "oxygen"
+
+	if(!isnull(signal.data["n2_scrub"]) && text2num(signal.data["n2_scrub"]) != ("nitrogen" in scrubbing_gas))
+		toggle += "nitrogen"
+	else if(signal.data["toggle_n2_scrub"])
+		toggle += "nitrogen"
 
 	if(!isnull(signal.data["co2_scrub"]) && text2num(signal.data["co2_scrub"]) != ("carbon_dioxide" in scrubbing_gas))
 		toggle += "carbon_dioxide"
@@ -234,27 +256,27 @@
 	if (!istype(W, /obj/item/weapon/wrench))
 		return ..()
 	if (!(stat & NOPOWER) && use_power)
-		user << "\red You cannot unwrench this [src], turn it off first."
+		user << "<span class='warning'>You cannot unwrench \the [src], turn it off first.</span>"
 		return 1
 	var/turf/T = src.loc
-	if (node && node.level==1 && isturf(T) && T.intact)
-		user << "\red You must remove the plating first."
+	if (node && node.level==1 && isturf(T) && !T.is_plating())
+		user << "<span class='warning'>You must remove the plating first.</span>"
 		return 1
 	var/datum/gas_mixture/int_air = return_air()
 	var/datum/gas_mixture/env_air = loc.return_air()
 	if ((int_air.return_pressure()-env_air.return_pressure()) > 2*ONE_ATMOSPHERE)
-		user << "\red You cannot unwrench this [src], it too exerted due to internal pressure."
+		user << "<span class='warning'>You cannot unwrench \the [src], it is too exerted due to internal pressure.</span>"
 		add_fingerprint(user)
 		return 1
 	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-	user << "\blue You begin to unfasten \the [src]..."
+	user << "<span class='notice'>You begin to unfasten \the [src]...</span>"
 	if (do_after(user, 40))
 		user.visible_message( \
-			"[user] unfastens \the [src].", \
-			"\blue You have unfastened \the [src].", \
-			"You hear ratchet.")
+			"<span class='notice'>\The [user] unfastens \the [src].</span>", \
+			"<span class='notice'>You have unfastened \the [src].</span>", \
+			"You hear a ratchet.")
 		new /obj/item/pipe(loc, make_from=src)
-		del(src)
+		qdel(src)
 
 /obj/machinery/atmospherics/unary/vent_scrubber/examine(mob/user)
 	if(..(user, 1))
@@ -262,7 +284,7 @@
 	else
 		user << "You are too far away to read the gauge."
 
-/obj/machinery/atmospherics/unary/vent_scrubber/Del()
+/obj/machinery/atmospherics/unary/vent_scrubber/Destroy()
 	if(initial_loc)
 		initial_loc.air_scrub_info -= id_tag
 		initial_loc.air_scrub_names -= id_tag

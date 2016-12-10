@@ -1,20 +1,28 @@
 datum/preferences
 	//The mob should have a gender you want before running this proc. Will run fine without H
 	proc/randomize_appearance_for(var/mob/living/carbon/human/H)
-		if(H)
-			if(H.gender == MALE)
-				gender = MALE
-			else
-				gender = FEMALE
-		s_tone = random_skin_tone()
+		gender = pick(MALE, FEMALE)
+		var/datum/species/current_species = all_species[species]
+
+		if(current_species)
+			if(current_species.appearance_flags & HAS_SKIN_TONE)
+				s_tone = random_skin_tone()
+			if(current_species.appearance_flags & HAS_EYE_COLOR)
+				randomize_eyes_color()
+			if(current_species.appearance_flags & HAS_SKIN_COLOR)
+				randomize_skin_color()
+			if(current_species.appearance_flags & HAS_UNDERWEAR)
+				if(gender == FEMALE)
+					underwear = underwear_f[pick(underwear_f)]
+				else
+					underwear = underwear_m[pick(underwear_m)]
+				undershirt = undershirt_t[pick(undershirt_t)]
+
 		h_style = random_hair_style(gender, species)
 		f_style = random_facial_hair_style(gender, species)
 		randomize_hair_color("hair")
 		randomize_hair_color("facial")
-		randomize_eyes_color()
-		randomize_skin_color()
-		underwear = rand(1,underwear_m.len)
-		undershirt = rand(1,undershirt_t.len)
+
 		backbag = 2
 		age = rand(AGE_MIN,AGE_MAX)
 		if(H)
@@ -179,9 +187,9 @@ datum/preferences
 
 
 	proc/update_preview_icon()		//seriously. This is horrendous.
-		del(preview_icon_front)
-		del(preview_icon_side)
-		del(preview_icon)
+		qdel(preview_icon_front)
+		qdel(preview_icon_side)
+		qdel(preview_icon)
 
 		var/g = "m"
 		if(gender == FEMALE)	g = "f"
@@ -200,12 +208,13 @@ datum/preferences
 
 		for(var/name in list("r_arm","r_hand","r_leg","r_foot","l_leg","l_foot","l_arm","l_hand"))
 			if(organ_data[name] == "amputated") continue
-
-			var/icon/temp = new /icon(icobase, "[name]")
 			if(organ_data[name] == "cyborg")
-				temp.MapColors(rgb(77,77,77), rgb(150,150,150), rgb(28,28,28), rgb(0,0,0))
-
-			preview_icon.Blend(temp, ICON_OVERLAY)
+				var/datum/robolimb/R
+				if(rlimb_data[name]) R = all_robolimbs[rlimb_data[name]]
+				if(!R) R = basic_robolimb
+				preview_icon.Blend(icon(R.icon, "[name]"), ICON_OVERLAY) // This doesn't check gendered_icon. Not an issue while only limbs can be robotic.
+				continue
+			preview_icon.Blend(new /icon(icobase, "[name]"), ICON_OVERLAY)
 
 		//Tail
 		if(current_species && (current_species.tail))
@@ -213,18 +222,18 @@ datum/preferences
 			preview_icon.Blend(temp, ICON_OVERLAY)
 
 		// Skin color
-		if(current_species && (current_species.flags & HAS_SKIN_COLOR))
+		if(current_species && (current_species.appearance_flags & HAS_SKIN_COLOR))
 			preview_icon.Blend(rgb(r_skin, g_skin, b_skin), ICON_ADD)
 
 		// Skin tone
-		if(current_species && (current_species.flags & HAS_SKIN_TONE))
+		if(current_species && (current_species.appearance_flags & HAS_SKIN_TONE))
 			if (s_tone >= 0)
 				preview_icon.Blend(rgb(s_tone, s_tone, s_tone), ICON_ADD)
 			else
 				preview_icon.Blend(rgb(-s_tone,  -s_tone,  -s_tone), ICON_SUBTRACT)
 
 		var/icon/eyes_s = new/icon("icon" = 'icons/mob/human_face.dmi', "icon_state" = current_species ? current_species.eyes : "eyes_s")
-		if ((current_species && (current_species.flags & HAS_EYE_COLOR)))
+		if ((current_species && (current_species.appearance_flags & HAS_EYE_COLOR)))
 			eyes_s.Blend(rgb(r_eyes, g_eyes, b_eyes), ICON_ADD)
 
 		var/datum/sprite_accessory/hair_style = hair_styles_list[h_style]
@@ -240,12 +249,12 @@ datum/preferences
 			eyes_s.Blend(facial_s, ICON_OVERLAY)
 
 		var/icon/underwear_s = null
-		if(underwear > 0 && underwear < 7 && current_species.flags & HAS_UNDERWEAR)
-			underwear_s = new/icon("icon" = 'icons/mob/human.dmi', "icon_state" = "underwear[underwear]_[g]_s")
+		if(underwear && current_species.appearance_flags & HAS_UNDERWEAR)
+			underwear_s = new/icon("icon" = 'icons/mob/human.dmi', "icon_state" = underwear)
 
 		var/icon/undershirt_s = null
-		if(undershirt > 0 && undershirt < 5 && current_species.flags & HAS_UNDERWEAR)
-			undershirt_s = new/icon("icon" = 'icons/mob/human.dmi', "icon_state" = "undershirt[undershirt]_s")
+		if(undershirt && current_species.appearance_flags & HAS_UNDERWEAR)
+			undershirt_s = new/icon("icon" = 'icons/mob/human.dmi', "icon_state" = undershirt)
 
 		var/icon/clothes_s = null
 		if(job_civilian_low & ASSISTANT)//This gives the preview icon clothes depending on which job(if any) is set to 'high'
@@ -375,7 +384,7 @@ datum/preferences
 				if(LAWYER)
 					clothes_s = new /icon('icons/mob/uniform.dmi', "internalaffairs_s")
 					clothes_s.Blend(new /icon('icons/mob/feet.dmi', "brown"), ICON_UNDERLAY)
-					clothes_s.Blend(new /icon('icons/mob/items_righthand.dmi', "briefcase"), ICON_UNDERLAY)
+					clothes_s.Blend(new /icon(INV_R_HAND_DEF_ICON, "briefcase"), ICON_UNDERLAY)
 					if(prob(1))
 						clothes_s.Blend(new /icon('icons/mob/suit.dmi', "suitjacket_blue"), ICON_OVERLAY)
 					switch(backbag)
@@ -534,7 +543,7 @@ datum/preferences
 					clothes_s.Blend(new /icon('icons/mob/hands.dmi', "bgloves"), ICON_UNDERLAY)
 					clothes_s.Blend(new /icon('icons/mob/suit.dmi', "labcoat_open"), ICON_OVERLAY)
 					if(prob(1))
-						clothes_s.Blend(new /icon('icons/mob/items_righthand.dmi', "toolbox_blue"), ICON_OVERLAY)
+						clothes_s.Blend(new /icon(INV_R_HAND_DEF_ICON, "toolbox_blue"), ICON_OVERLAY)
 					switch(backbag)
 						if(2)
 							clothes_s.Blend(new /icon('icons/mob/back.dmi', "backpack"), ICON_OVERLAY)
@@ -620,7 +629,7 @@ datum/preferences
 					clothes_s.Blend(new /icon('icons/mob/belt.dmi', "utility"), ICON_OVERLAY)
 					clothes_s.Blend(new /icon('icons/mob/head.dmi', "hardhat0_white"), ICON_OVERLAY)
 					if(prob(1))
-						clothes_s.Blend(new /icon('icons/mob/items_righthand.dmi', "blueprints"), ICON_OVERLAY)
+						clothes_s.Blend(new /icon(INV_R_HAND_DEF_ICON, "blueprints"), ICON_OVERLAY)
 					switch(backbag)
 						if(2)
 							clothes_s.Blend(new /icon('icons/mob/back.dmi', "engiepack"), ICON_OVERLAY)
@@ -689,7 +698,7 @@ datum/preferences
 		preview_icon_front = new(preview_icon, dir = SOUTH)
 		preview_icon_side = new(preview_icon, dir = WEST)
 
-		del(eyes_s)
-		del(underwear_s)
-		del(undershirt_s)
-		del(clothes_s)
+		qdel(eyes_s)
+		qdel(underwear_s)
+		qdel(undershirt_s)
+		qdel(clothes_s)

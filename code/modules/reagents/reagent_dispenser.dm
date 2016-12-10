@@ -7,7 +7,6 @@
 	icon_state = "watertank"
 	density = 1
 	anchored = 0
-	pressure_resistance = 2*ONE_ATMOSPHERE
 
 	var/amount_per_transfer_from_this = 10
 	var/possible_transfer_amounts = list(10,25,50,100)
@@ -44,25 +43,20 @@
 	ex_act(severity)
 		switch(severity)
 			if(1.0)
-				del(src)
+				qdel(src)
 				return
 			if(2.0)
 				if (prob(50))
 					new /obj/effect/effect/water(src.loc)
-					del(src)
+					qdel(src)
 					return
 			if(3.0)
 				if (prob(5))
 					new /obj/effect/effect/water(src.loc)
-					del(src)
+					qdel(src)
 					return
 			else
 		return
-
-	blob_act()
-		if(prob(50))
-			new /obj/effect/effect/water(src.loc)
-			del(src)
 
 
 
@@ -99,7 +93,7 @@
 	if (modded)
 		user << "\red Fuel faucet is wrenched open, leaking the fuel!"
 	if(rig)
-		user << "<span class='notice'>There is some kind of device rigged to the tank."
+		user << "<span class='notice'>There is some kind of device rigged to the tank.</span>"
 
 /obj/structure/reagent_dispensers/fueltank/attack_hand()
 	if (rig)
@@ -146,16 +140,13 @@
 
 
 /obj/structure/reagent_dispensers/fueltank/bullet_act(var/obj/item/projectile/Proj)
-	if(istype(Proj ,/obj/item/projectile/beam)||istype(Proj,/obj/item/projectile/bullet))
+	if(Proj.get_structure_damage())
 		if(istype(Proj.firer))
 			message_admins("[key_name_admin(Proj.firer)] shot fueltank at [loc.loc.name] ([loc.x],[loc.y],[loc.z]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[loc.x];Y=[loc.y];Z=[loc.z]'>JMP</a>).")
 			log_game("[key_name(Proj.firer)] shot fueltank at [loc.loc.name] ([loc.x],[loc.y],[loc.z]).")
 
 		if(!istype(Proj ,/obj/item/projectile/beam/lastertag) && !istype(Proj ,/obj/item/projectile/beam/practice) )
 			explode()
-
-/obj/structure/reagent_dispensers/fueltank/blob_act()
-	explode()
 
 /obj/structure/reagent_dispensers/fueltank/ex_act()
 	explode()
@@ -165,13 +156,15 @@
 		explosion(src.loc,1,2,4)
 	else if (reagents.total_volume > 100)
 		explosion(src.loc,0,1,3)
-	else
+	else if (reagents.total_volume > 50)
 		explosion(src.loc,-1,1,2)
 	if(src)
-		del(src)
+		qdel(src)
 
 /obj/structure/reagent_dispensers/fueltank/fire_act(datum/gas_mixture/air, temperature, volume)
-	if(temperature > T0C+500)
+	if (modded)
+		explode()
+	else if (temperature > T0C+500)
 		explode()
 	return ..()
 
@@ -223,10 +216,6 @@
 		..()
 		reagents.add_reagent("beer",1000)
 
-/obj/structure/reagent_dispensers/beerkeg/blob_act()
-	explosion(src.loc,0,3,5,7,10)
-	del(src)
-
 /obj/structure/reagent_dispensers/virusfood
 	name = "Virus Food Dispenser"
 	desc = "A dispenser of virus food."
@@ -238,3 +227,15 @@
 	New()
 		..()
 		reagents.add_reagent("virusfood", 1000)
+
+/obj/structure/reagent_dispensers/acid
+	name = "Sulphuric Acid Dispenser"
+	desc = "A dispenser of acid for industrial processes."
+	icon = 'icons/obj/objects.dmi'
+	icon_state = "acidtank"
+	amount_per_transfer_from_this = 10
+	anchored = 1
+
+	New()
+		..()
+		reagents.add_reagent("sacid", 1000)

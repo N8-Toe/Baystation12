@@ -11,7 +11,11 @@
 	density = 1
 	anchored = 1
 	animate_movement=1
-	luminosity = 3
+	light_range = 3
+
+	can_buckle = 1
+	buckle_movable = 1
+	buckle_lying = 0
 
 	var/attack_log = null
 	var/on = 0
@@ -25,7 +29,6 @@
 	var/emagged = 0
 	var/powered = 0		//set if vehicle is powered and should use fuel when moving
 	var/move_delay = 1	//set this to limit the speed of the vehicle
-	var/movable = 1
 
 	var/obj/item/weapon/cell/cell
 	var/charge_use = 5	//set this to adjust the amount of power the vehicle uses per move
@@ -90,6 +93,7 @@
 			if(health < maxhealth)
 				if(open)
 					health = min(maxhealth, health+10)
+					user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 					user.visible_message("\red [user] repairs [src]!","\blue You repair [src]!")
 				else
 					user << "<span class='notice'>Unable to repair with the maintenance panel closed.</span>"
@@ -97,9 +101,8 @@
 				user << "<span class='notice'>[src] does not need a repair.</span>"
 		else
 			user << "<span class='notice'>Unable to repair while [src] is off.</span>"
-	else if(istype(W, /obj/item/weapon/card/emag) && !emagged)
-		Emag(user)
 	else if(hasvar(W,"force") && hasvar(W,"damtype"))
+		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		switch(W.damtype)
 			if("fire")
 				health -= W.force * fire_dam_coeff
@@ -111,18 +114,9 @@
 		..()
 
 /obj/vehicle/bullet_act(var/obj/item/projectile/Proj)
-	health -= Proj.damage
+	health -= Proj.get_structure_damage()
 	..()
 	healthcheck()
-
-/obj/vehicle/meteorhit()
-	explode()
-	return
-
-/obj/vehicle/blob_act()
-	src.health -= rand(20,40)*fire_dam_coeff
-	healthcheck()
-	return
 
 /obj/vehicle/ex_act(severity)
 	switch(severity)
@@ -145,7 +139,7 @@
 /obj/vehicle/emp_act(severity)
 	var/was_on = on
 	stat |= EMPED
-	var/obj/effect/overlay/pulse2 = new/obj/effect/overlay ( src.loc )
+	var/obj/effect/overlay/pulse2 = PoolOrNew(/obj/effect/overlay, src.loc)
 	pulse2.icon = 'icons/effects/effects.dmi'
 	pulse2.icon_state = "empdisable"
 	pulse2.name = "emp sparks"
@@ -153,7 +147,7 @@
 	pulse2.set_dir(pick(cardinal))
 
 	spawn(10)
-		pulse2.delete()
+		qdel(pulse2)
 	if(on)
 		turn_off()
 	spawn(severity*300)
@@ -177,28 +171,29 @@
 	if(powered && cell.charge < charge_use)
 		return 0
 	on = 1
-	luminosity = initial(luminosity)
+	set_light(initial(light_range))
 	update_icon()
 	return 1
 
 /obj/vehicle/proc/turn_off()
 	on = 0
-	luminosity = 0
+	set_light(0)
 	update_icon()
 
-/obj/vehicle/proc/Emag(mob/user as mob)
-	emagged = 1
-
-	if(locked)
-		locked = 0
-		user << "<span class='warning'>You bypass [src]'s controls.</span>"
+/obj/vehicle/emag_act(var/remaining_charges, mob/user as mob)
+	if(!emagged)
+		emagged = 1
+		if(locked)
+			locked = 0
+			user << "<span class='warning'>You bypass [src]'s controls.</span>"
+		return 1
 
 /obj/vehicle/proc/explode()
 	src.visible_message("\red <B>[src] blows apart!</B>", 1)
 	var/turf/Tsec = get_turf(src)
 
-	new /obj/item/stack/rods(Tsec)
-	new /obj/item/stack/rods(Tsec)
+	PoolOrNew(/obj/item/stack/rods, Tsec)
+	PoolOrNew(/obj/item/stack/rods, Tsec)
 	new /obj/item/stack/cable_coil/cut(Tsec)
 
 	if(cell)
@@ -216,7 +211,7 @@
 	new /obj/effect/gibspawner/robot(Tsec)
 	new /obj/effect/decal/cleanable/blood/oil(src.loc)
 
-	del(src)
+	qdel(src)
 
 /obj/vehicle/proc/healthcheck()
 	if(health <= 0)
@@ -298,9 +293,7 @@
 		C.layer = layer + 0.1		//so it sits above the vehicle
 
 	if(ismob(C))
-		var/mob/M = C
-		M.buckled = src
-		M.update_canmove()
+		buckle_mob(C)
 
 	return 1
 
@@ -343,10 +336,7 @@
 	load.layer = initial(load.layer)
 
 	if(ismob(load))
-		var/mob/M = load
-		M.buckled = null
-		M.anchored = initial(M.anchored)
-		M.update_canmove()
+		unbuckle_mob(load)
 
 	load = null
 
@@ -364,6 +354,7 @@
 		return
 	visible_message("<span class='danger'>[user] [attack_message] the [src]!</span>")
 	user.attack_log += text("\[[time_stamp()]\] <font color='red'>attacked [src.name]</font>")
+	user.do_attack_animation(src)
 	src.health -= damage
 	if(prob(10))
 		new /obj/effect/decal/cleanable/blood/oil(src.loc)

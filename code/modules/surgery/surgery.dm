@@ -32,12 +32,12 @@
 
 		if(allowed_species)
 			for(var/species in allowed_species)
-				if(target.species.name == species)
+				if(target.species.get_bodytype() == species)
 					return 1
 
 		if(disallowed_species)
 			for(var/species in disallowed_species)
-				if(target.species.name == species)
+				if(target.species.get_bodytype() == species)
 					return 0
 
 		return 1
@@ -49,7 +49,7 @@
 
 	// does stuff to begin the step, usually just printing messages. Moved germs transfering and bloodying here too
 	proc/begin_step(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
-		var/datum/organ/external/affected = target.get_organ(target_zone)
+		var/obj/item/organ/external/affected = target.get_organ(target_zone)
 		if (can_infect && affected)
 			spread_germs_to_organ(affected, user)
 		if (ishuman(user) && prob(60))
@@ -68,7 +68,7 @@
 	proc/fail_step(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
 		return null
 
-proc/spread_germs_to_organ(datum/organ/external/E, mob/living/carbon/human/user)
+proc/spread_germs_to_organ(var/obj/item/organ/external/E, var/mob/living/carbon/human/user)
 	if(!istype(user) || !istype(E)) return
 
 	var/germ_level = user.germ_level
@@ -80,18 +80,18 @@ proc/spread_germs_to_organ(datum/organ/external/E, mob/living/carbon/human/user)
 proc/do_surgery(mob/living/carbon/M, mob/living/user, obj/item/tool)
 	if(!istype(M))
 		return 0
-	if (user.a_intent == "harm")	//check for Hippocratic Oath
+	if (user.a_intent == I_HURT)	//check for Hippocratic Oath
 		return 0
 	var/zone = user.zone_sel.selecting
 	if(zone in M.op_stage.in_progress) //Can't operate on someone repeatedly.
-		user << "\red You can't operate on this area while surgery is already in progress."
+		user << "<span class='warning'>You can't operate on this area while surgery is already in progress.</span>"
 		return 1
 	for(var/datum/surgery_step/S in surgery_steps)
 		//check if tool is right or close enough and if this step is possible
 		if(S.tool_quality(tool))
 			var/step_is_valid = S.can_use(user, M, zone, tool)
 			if(step_is_valid && S.is_valid_target(M))
-				if(step_is_valid == 2) // This is a failure that already has a message for failing.
+				if(step_is_valid == SURGERY_FAILURE) // This is a failure that already has a message for failing.
 					return 1
 				M.op_stage.in_progress += zone
 				S.begin_step(user, M, zone, tool)		//start on it
@@ -101,13 +101,15 @@ proc/do_surgery(mob/living/carbon/M, mob/living/user, obj/item/tool)
 				else if ((tool in user.contents) && user.Adjacent(M))			//or
 					S.fail_step(user, M, zone, tool)		//malpractice~
 				else // This failing silently was a pain.
-					user << "\red You must remain close to your patient to conduct surgery."
+					user << "<span class='warning'>You must remain close to your patient to conduct surgery.</span>"
 				M.op_stage.in_progress -= zone 									// Clear the in-progress flag.
+				if (ishuman(M))
+					var/mob/living/carbon/human/H = M
+					H.update_surgery()
 				return	1	  												//don't want to do weapony things after surgery
 
-	if (user.a_intent == "help")
-		user << "\red You can't see any useful way to use [tool] on [M]."
-		return 1
+	if (user.a_intent == I_HELP)
+		user << "<span class='warning'>You can't see any useful way to use [tool] on [M].</span>"
 	return 0
 
 proc/sort_surgeries()

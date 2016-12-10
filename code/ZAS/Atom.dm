@@ -1,7 +1,4 @@
 
-
-/atom/var/pressure_resistance = ONE_ATMOSPHERE
-
 /atom/proc/CanPass(atom/movable/mover, turf/target, height=1.5, air_group = 0)
 	//Purpose: Determines if the object (or airflow) can pass this atom.
 	//Called by: Movement, airflow.
@@ -50,7 +47,7 @@ atom/proc/c_airblock(turf/other)
 	#ifdef ZASDBG
 	ASSERT(isturf(other))
 	#endif
-	return !CanPass(null, other, 0, 0) + 2*!CanPass(null, other, 1.5, 1)
+	return (AIR_BLOCKED*!CanPass(null, other, 0, 0))|(ZONE_BLOCKED*!CanPass(null, other, 1.5, 1))
 
 
 turf/c_airblock(turf/other)
@@ -64,9 +61,9 @@ turf/c_airblock(turf/other)
 	#ifdef ZLEVELS
 	if(other.z != src.z)
 		if(other.z < src.z)
-			if(!istype(src, /turf/simulated/floor/open)) return BLOCKED
+			if(!istype(src, /turf/simulated/open)) return BLOCKED
 		else
-			if(!istype(other, /turf/simulated/floor/open)) return BLOCKED
+			if(!istype(other, /turf/simulated/open)) return BLOCKED
 	#endif
 
 	var/result = 0

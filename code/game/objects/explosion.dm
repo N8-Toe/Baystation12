@@ -1,14 +1,6 @@
 //TODO: Flash range does nothing currently
 
-//A very crude linear approximatiaon of pythagoras theorem.
-/proc/cheap_pythag(var/dx, var/dy)
-	dx = abs(dx); dy = abs(dy);
-	if(dx>=dy)	return dx + (0.5*dy)	//The longest side add half the shortest side approximates the hypotenuse
-	else		return dy + (0.5*dx)
-
-///// Z-Level Stuff
-proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impact_range, flash_range, adminlog = 1, z_transfer = 1)
-///// Z-Level Stuff
+proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impact_range, flash_range, adminlog = 1, z_transfer = UP|DOWN)
 	src = null	//so we don't abort once src is deleted
 	spawn(0)
 		if(config.use_recursive_explosions)
@@ -16,27 +8,23 @@ proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impa
 			explosion_rec(epicenter, power)
 			return
 
-///// Z-Level Stuff
-		if(z_transfer && (devastation_range > 0 || heavy_impact_range > 0))
-			//transfer the explosion in both directions
-			explosion_z_transfer(epicenter, devastation_range, heavy_impact_range, light_impact_range, flash_range)
-///// Z-Level Stuff
-
 		var/start = world.timeofday
 		epicenter = get_turf(epicenter)
 		if(!epicenter) return
 
+		// Handles recursive propagation of explosions.
+		if(devastation_range > 2 || heavy_impact_range > 2)
+			if(HasAbove(epicenter.z) && z_transfer & UP)
+				explosion(GetAbove(epicenter), max(0, devastation_range - 2), max(0, heavy_impact_range - 2), max(0, light_impact_range - 2), max(0, flash_range - 2), 0, UP)
+			if(HasBelow(epicenter.z) && z_transfer & DOWN)
+				explosion(GetAbove(epicenter), max(0, devastation_range - 2), max(0, heavy_impact_range - 2), max(0, light_impact_range - 2), max(0, flash_range - 2), 0, DOWN)
+
 		var/max_range = max(devastation_range, heavy_impact_range, light_impact_range, flash_range)
-		//playsound(epicenter, 'sound/effects/explosionfar.ogg', 100, 1, round(devastation_range*2,1) )
-		//playsound(epicenter, "explosion", 100, 1, round(devastation_range,1) )
 
-// Play sounds; we want sounds to be different depending on distance so we will manually do it ourselves.
-
-// Stereo users will also hear the direction of the explosion!
-
-// Calculate far explosion sound range. Only allow the sound effect for heavy/devastating explosions.
-
-// 3/7/14 will calculate to 80 + 35
+		// Play sounds; we want sounds to be different depending on distance so we will manually do it ourselves.
+		// Stereo users will also hear the direction of the explosion!
+		// Calculate far explosion sound range. Only allow the sound effect for heavy/devastating explosions.
+		// 3/7/14 will calculate to 80 + 35
 		var/far_dist = 0
 		far_dist += heavy_impact_range * 5
 		far_dist += devastation_range * 20
@@ -68,10 +56,6 @@ proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impa
 			message_admins("Explosion with size ([devastation_range], [heavy_impact_range], [light_impact_range]) in area [epicenter.loc.name] ([epicenter.x],[epicenter.y],[epicenter.z]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[epicenter.x];Y=[epicenter.y];Z=[epicenter.z]'>JMP</a>)")
 			log_game("Explosion with size ([devastation_range], [heavy_impact_range], [light_impact_range]) in area [epicenter.loc.name] ")
 
-		var/lighting_controller_was_processing = lighting_controller.processing	//Pause the lighting updates for a bit
-		lighting_controller.processing = 0
-
-
 		var/approximate_intensity = (devastation_range * 3) + (heavy_impact_range * 2) + light_impact_range
 		var/powernet_rebuild_was_deferred_already = defer_powernet_rebuild
 		// Large enough explosion. For performance reasons, powernets will be rebuilt manually
@@ -87,8 +71,8 @@ proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impa
 		var/y0 = epicenter.y
 		var/z0 = epicenter.z
 
-		for(var/turf/T in range(epicenter, max_range))
-			var/dist = cheap_pythag(T.x - x0,T.y - y0)
+		for(var/turf/T in trange(max_range, epicenter))
+			var/dist = sqrt((T.x - x0)**2 + (T.y - y0)**2)
 
 			if(dist < devastation_range)		dist = 1
 			else if(dist < heavy_impact_range)	dist = 2
@@ -99,7 +83,7 @@ proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impa
 			if(T)
 				for(var/atom_movable in T.contents)	//bypass type checking since only atom/movable can be contained by turfs anyway
 					var/atom/movable/AM = atom_movable
-					if(AM)	AM.ex_act(dist)
+					if(AM && AM.simulated)	AM.ex_act(dist)
 
 		var/took = (world.timeofday-start)/10
 		//You need to press the DebugGame verb to see these now....they were getting annoying and we've collected a fair bit of data. Just -test- changes  to explosion code using this please so we can compare
@@ -113,7 +97,6 @@ proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impa
 
 		sleep(8)
 
-		if(!lighting_controller.processing)	lighting_controller.processing = lighting_controller_was_processing
 		if(!powernet_rebuild_was_deferred_already && defer_powernet_rebuild)
 			makepowernets()
 			defer_powernet_rebuild = 0
@@ -125,20 +108,3 @@ proc/explosion(turf/epicenter, devastation_range, heavy_impact_range, light_impa
 proc/secondaryexplosion(turf/epicenter, range)
 	for(var/turf/tile in range(range, epicenter))
 		tile.ex_act(2)
-
-///// Z-Level Stuff
-proc/explosion_z_transfer(turf/epicenter, devastation_range, heavy_impact_range, light_impact_range, flash_range, up = 1, down = 1)
-	var/turf/controllerlocation = locate(1, 1, epicenter.z)
-	for(var/obj/effect/landmark/zcontroller/controller in controllerlocation)
-		if(controller.down)
-			//start the child explosion, no admin log and no additional transfers
-			explosion(locate(epicenter.x, epicenter.y, controller.down_target), max(devastation_range - 2, 0), max(heavy_impact_range - 2, 0), max(light_impact_range - 2, 0), max(flash_range - 2, 0), 0, 0)
-			if(devastation_range - 2 > 0 || heavy_impact_range - 2 > 0) //only transfer further if the explosion is still big enough
-				explosion(locate(epicenter.x, epicenter.y, controller.down_target), max(devastation_range - 2, 0), max(heavy_impact_range - 2, 0), max(light_impact_range - 2, 0), max(flash_range - 2, 0), 0, 1)
-
-		if(controller.up)
-			//start the child explosion, no admin log and no additional transfers
-			explosion(locate(epicenter.x, epicenter.y, controller.up_target), max(devastation_range - 2, 0), max(heavy_impact_range - 2, 0), max(light_impact_range - 2, 0), max(flash_range - 2, 0), 0, 0)
-			if(devastation_range - 2 > 0 || heavy_impact_range - 2 > 0) //only transfer further if the explosion is still big enough
-				explosion(locate(epicenter.x, epicenter.y, controller.up_target), max(devastation_range - 2, 0), max(heavy_impact_range - 2, 0), max(light_impact_range - 2, 0), max(flash_range - 2, 0), 1, 0)
-///// Z-Level Stuff

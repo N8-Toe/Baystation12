@@ -4,8 +4,30 @@
 	icon = 'icons/obj/clothing/belts.dmi'
 	icon_state = "utilitybelt"
 	item_state = "utility"
+	storage_slots = 7
+	max_w_class = 3
+	max_storage_space = 28
 	slot_flags = SLOT_BELT
 	attack_verb = list("whipped", "lashed", "disciplined")
+	sprite_sheets = list("Resomi" = 'icons/mob/species/resomi/belt.dmi')
+
+	var/show_above_suit = 0
+
+/obj/item/weapon/storage/belt/verb/toggle_layer()
+	set name = "Switch Belt Layer"
+	set category = "Object"
+
+	if(show_above_suit == -1)
+		usr << "<span class='notice'>\The [src] cannot be worn above your suit!</span>"
+		return
+	show_above_suit = !show_above_suit
+	update_icon()
+
+/obj/item/weapon/storage/update_icon()
+	if (ismob(src.loc))
+		var/mob/M = src.loc
+		M.update_inv_belt()
+
 
 /obj/item/weapon/storage/belt/utility
 	name = "tool-belt" //Carn: utility belt is nicer, but it bamboozles the text parsing.
@@ -13,19 +35,24 @@
 	icon_state = "utilitybelt"
 	item_state = "utility"
 	can_hold = list(
-		//"/obj/item/weapon/combitool",
-		"/obj/item/weapon/crowbar",
-		"/obj/item/weapon/screwdriver",
-		"/obj/item/weapon/weldingtool",
-		"/obj/item/weapon/wirecutters",
-		"/obj/item/weapon/wrench",
-		"/obj/item/device/multitool",
-		"/obj/item/device/flashlight",
-		"/obj/item/stack/cable_coil",
-		"/obj/item/device/t_scanner",
-		"/obj/item/device/analyzer",
-		"/obj/item/taperoll/engineering",
-		"/obj/item/device/robotanalyzer")
+		///obj/item/weapon/combitool,
+		/obj/item/weapon/crowbar,
+		/obj/item/weapon/screwdriver,
+		/obj/item/weapon/weldingtool,
+		/obj/item/weapon/wirecutters,
+		/obj/item/weapon/wrench,
+		/obj/item/device/multitool,
+		/obj/item/device/flashlight,
+		/obj/item/stack/cable_coil,
+		/obj/item/device/t_scanner,
+		/obj/item/device/analyzer,
+		/obj/item/taperoll/engineering,
+		/obj/item/device/robotanalyzer,
+		/obj/item/weapon/material/minihoe,
+		/obj/item/weapon/material/hatchet,
+		/obj/item/device/analyzer/plant_analyzer,
+		/obj/item/weapon/extinguisher/mini
+		)
 
 
 /obj/item/weapon/storage/belt/utility/full/New()
@@ -55,53 +82,60 @@
 	icon_state = "medicalbelt"
 	item_state = "medical"
 	can_hold = list(
-		"/obj/item/device/healthanalyzer",
-		"/obj/item/weapon/dnainjector",
-		"/obj/item/weapon/reagent_containers/dropper",
-		"/obj/item/weapon/reagent_containers/glass/beaker",
-		"/obj/item/weapon/reagent_containers/glass/bottle",
-		"/obj/item/weapon/reagent_containers/pill",
-		"/obj/item/weapon/reagent_containers/syringe",
-		"/obj/item/weapon/reagent_containers/glass/dispenser",
-		"/obj/item/weapon/flame/lighter/zippo",
-		"/obj/item/weapon/storage/fancy/cigarettes",
-		"/obj/item/weapon/storage/pill_bottle",
-		"/obj/item/stack/medical",
-		"/obj/item/device/flashlight/pen",
-		"/obj/item/clothing/mask/surgical",
-		"/obj/item/clothing/gloves/latex",
-	        "/obj/item/weapon/reagent_containers/hypospray"
-	)
+		/obj/item/device/healthanalyzer,
+		/obj/item/weapon/dnainjector,
+		/obj/item/weapon/reagent_containers/dropper,
+		/obj/item/weapon/reagent_containers/glass/beaker,
+		/obj/item/weapon/reagent_containers/glass/bottle,
+		/obj/item/weapon/reagent_containers/pill,
+		/obj/item/weapon/reagent_containers/syringe,
+		/obj/item/weapon/flame/lighter/zippo,
+		/obj/item/weapon/storage/fancy/cigarettes,
+		/obj/item/weapon/storage/pill_bottle,
+		/obj/item/stack/medical,
+		/obj/item/device/flashlight/pen,
+		/obj/item/clothing/mask/surgical,
+		/obj/item/clothing/head/surgery,
+		/obj/item/clothing/gloves/latex,
+		/obj/item/weapon/reagent_containers/hypospray,
+		/obj/item/clothing/glasses/hud/health,
+		/obj/item/weapon/crowbar,
+		/obj/item/device/flashlight,
+		/obj/item/weapon/extinguisher/mini
+		)
 
+/obj/item/weapon/storage/belt/medical/emt
+	name = "EMT utility belt"
+	desc = "A sturdy black webbing belt with attached pouches."
+	icon_state = "emsbelt"
+	item_state = "emsbelt"
 
 /obj/item/weapon/storage/belt/security
 	name = "security belt"
 	desc = "Can hold security gear like handcuffs and flashes."
 	icon_state = "securitybelt"
-	item_state = "security"//Could likely use a better one.
-	storage_slots = 7
-	max_w_class = 3
-	max_combined_w_class = 21
+	item_state = "security"
 	can_hold = list(
-		"/obj/item/weapon/grenade",
-		"/obj/item/weapon/reagent_containers/spray/pepper",
-		"/obj/item/weapon/handcuffs",
-		"/obj/item/device/flash",
-		"/obj/item/clothing/glasses",
-		"/obj/item/ammo_casing/shotgun",
-		"/obj/item/ammo_magazine",
-		"/obj/item/weapon/reagent_containers/food/snacks/donut/normal",
-		"/obj/item/weapon/reagent_containers/food/snacks/donut/jelly",
-		"/obj/item/weapon/melee/baton",
-		"/obj/item/weapon/gun/energy/taser",
-		"/obj/item/weapon/flame/lighter/zippo",
-		"/obj/item/weapon/cigpacket",
-		"/obj/item/clothing/glasses/hud/security",
-		"/obj/item/device/flashlight",
-		"/obj/item/device/pda",
-		"/obj/item/device/radio/headset",
-		"/obj/item/weapon/melee",
-		"/obj/item/taperoll/police"
+		/obj/item/weapon/grenade,
+		/obj/item/weapon/reagent_containers/spray/pepper,
+		/obj/item/weapon/handcuffs,
+		/obj/item/device/flash,
+		/obj/item/clothing/glasses,
+		/obj/item/ammo_casing/shotgun,
+		/obj/item/ammo_magazine,
+		/obj/item/weapon/reagent_containers/food/snacks/donut/,
+		/obj/item/weapon/melee/baton,
+		/obj/item/weapon/gun/energy/taser,
+		/obj/item/weapon/flame/lighter,
+		/obj/item/clothing/glasses/hud/security,
+		/obj/item/device/flashlight,
+		/obj/item/device/pda,
+		/obj/item/device/radio/headset,
+		/obj/item/device/hailer,
+		/obj/item/device/megaphone,
+		/obj/item/weapon/melee,
+		/obj/item/weapon/gun/projectile/sec,
+		/obj/item/taperoll/police
 		)
 
 /obj/item/weapon/storage/belt/soulstone
@@ -111,7 +145,7 @@
 	item_state = "soulstonebelt"
 	storage_slots = 6
 	can_hold = list(
-		"/obj/item/device/soulstone"
+		/obj/item/device/soulstone
 		)
 
 /obj/item/weapon/storage/belt/soulstone/full/New()
@@ -140,5 +174,3 @@
 	icon_state = "swatbelt"
 	item_state = "swatbelt"
 	storage_slots = 9
-	max_w_class = 3
-	max_combined_w_class = 21

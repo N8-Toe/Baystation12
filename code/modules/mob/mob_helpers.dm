@@ -1,114 +1,34 @@
 // fun if you want to typecast humans/monkeys/etc without writing long path-filled lines.
-/proc/ishuman(A)
-	if(istype(A, /mob/living/carbon/human))
-		return 1
-	return 0
-
-/proc/isalien(A)
-	if(istype(A, /mob/living/carbon/alien))
-		return 1
-	return 0
-
 /proc/isxenomorph(A)
 	if(istype(A, /mob/living/carbon/human))
 		var/mob/living/carbon/human/H = A
 		return istype(H.species, /datum/species/xenos)
 	return 0
 
-/proc/ismonkey(A)
-	if(A && istype(A, /mob/living/carbon/monkey))
-		return 1
+/proc/issmall(A)
+	if(A && istype(A, /mob/living))
+		var/mob/living/L = A
+		return L.mob_size <= MOB_SMALL
 	return 0
 
-/proc/isbrain(A)
-	if(A && istype(A, /mob/living/carbon/brain))
-		return 1
+/mob/living/proc/isSynthetic()
 	return 0
 
-/proc/isslime(A)
-	if(istype(A, /mob/living/carbon/slime))
-		return 1
+/mob/living/carbon/human/isSynthetic()
+	// If they are 100% robotic, they count as synthetic.
+	for(var/obj/item/organ/external/E in organs)
+		if(!(E.status & ORGAN_ROBOT))
+			return 0
+	return 1
+
+/mob/living/silicon/isSynthetic()
+	return 1
+
+/mob/proc/isMonkey()
 	return 0
 
-/proc/isrobot(A)
-	if(istype(A, /mob/living/silicon/robot))
-		return 1
-	return 0
-
-/proc/isanimal(A)
-	if(istype(A, /mob/living/simple_animal))
-		return 1
-	return 0
-
-/proc/iscorgi(A)
-	if(istype(A, /mob/living/simple_animal/corgi))
-		return 1
-	return 0
-
-/proc/iscrab(A)
-	if(istype(A, /mob/living/simple_animal/crab))
-		return 1
-	return 0
-
-/proc/iscat(A)
-	if(istype(A, /mob/living/simple_animal/cat))
-		return 1
-	return 0
-
-/proc/ismouse(A)
-	if(istype(A, /mob/living/simple_animal/mouse))
-		return 1
-	return 0
-
-/proc/isbear(A)
-	if(istype(A, /mob/living/simple_animal/hostile/bear))
-		return 1
-	return 0
-
-/proc/iscarp(A)
-	if(istype(A, /mob/living/simple_animal/hostile/carp))
-		return 1
-	return 0
-
-/proc/isclown(A)
-	if(istype(A, /mob/living/simple_animal/hostile/retaliate/clown))
-		return 1
-	return 0
-
-/proc/isAI(A)
-	if(istype(A, /mob/living/silicon/ai))
-		return 1
-	return 0
-
-/proc/ispAI(A)
-	if(istype(A, /mob/living/silicon/pai))
-		return 1
-	return 0
-
-/proc/iscarbon(A)
-	if(istype(A, /mob/living/carbon))
-		return 1
-	return 0
-
-/proc/issilicon(A)
-	if(istype(A, /mob/living/silicon))
-		return 1
-	return 0
-
-/proc/isliving(A)
-	if(istype(A, /mob/living))
-		return 1
-	return 0
-
-proc/isobserver(A)
-	if(istype(A, /mob/dead/observer))
-		return 1
-	return 0
-
-proc/isorgan(A)
-	if(istype(A, /datum/organ/external))
-		return 1
-	return 0
+/mob/living/carbon/human/isMonkey()
+	return istype(species, /datum/species/monkey)
 
 proc/isdeaf(A)
 	if(istype(A, /mob))
@@ -116,12 +36,7 @@ proc/isdeaf(A)
 		return (M.sdisabilities & DEAF) || M.ear_deaf
 	return 0
 
-proc/isnewplayer(A)
-	if(istype(A, /mob/new_player))
-		return 1
-	return 0
-
-proc/hasorgans(A)
+proc/hasorgans(A) // Fucking really??
 	return ishuman(A)
 
 proc/iscuffed(A)
@@ -137,6 +52,18 @@ proc/hassensorlevel(A, var/level)
 		var/obj/item/clothing/under/U = H.w_uniform
 		return U.sensor_mode >= level
 	return 0
+
+proc/getsensorlevel(A)
+	var/mob/living/carbon/human/H = A
+	if(istype(H) && istype(H.w_uniform, /obj/item/clothing/under))
+		var/obj/item/clothing/under/U = H.w_uniform
+		return U.sensor_mode
+	return SUIT_SENSOR_OFF
+
+
+/proc/is_admin(var/mob/user)
+	return check_rights(R_ADMIN, 0, user) != 0
+
 
 /proc/hsl2rgb(h, s, l)
 	return //TODO: Implement
@@ -217,20 +144,26 @@ var/list/global/organ_rel_size = list(
 // Emulates targetting a specific body part, and miss chances
 // May return null if missed
 // miss_chance_mod may be negative.
-/proc/get_zone_with_miss_chance(zone, var/mob/target, var/miss_chance_mod = 0)
+/proc/get_zone_with_miss_chance(zone, var/mob/target, var/miss_chance_mod = 0, var/ranged_attack=0)
 	zone = check_zone(zone)
 
-	// you can only miss if your target is standing and not restrained
-	if(!target.buckled && !target.lying)
-		var/miss_chance = 10
-		if (zone in base_miss_chance)
-			miss_chance = base_miss_chance[zone]
-		miss_chance = max(miss_chance + miss_chance_mod, 0)
-		if(prob(miss_chance))
-			if(prob(70))
-				return null
-			return pick(base_miss_chance)
+	if(!ranged_attack)
+		// you cannot miss if your target is prone or restrained
+		if(target.buckled || target.lying)
+			return zone
+		// if your target is being grabbed aggressively by someone you cannot miss either
+		for(var/obj/item/weapon/grab/G in target.grabbed_by)
+			if(G.state >= GRAB_AGGRESSIVE)
+				return zone
 
+	var/miss_chance = 10
+	if (zone in base_miss_chance)
+		miss_chance = base_miss_chance[zone]
+	miss_chance = max(miss_chance + miss_chance_mod, 0)
+	if(prob(miss_chance))
+		if(prob(70))
+			return null
+		return pick(base_miss_chance)
 	return zone
 
 
@@ -305,7 +238,7 @@ proc/slur(phrase)
 						n_letter = text("[n_letter]-[n_letter]")
 		t = text("[t][n_letter]")//since the above is ran through for each letter, the text just adds up back to the original word.
 		p++//for each letter p is increased to find where the next letter will be.
-	return sanitize(copytext(t,1,MAX_MESSAGE_LEN))
+	return sanitize(t)
 
 
 proc/Gibberish(t, p)//t is the inputted message, and any value higher than 70 for p will cause letters to be replaced instead of added
@@ -352,11 +285,11 @@ It's fairly easy to fix if dealing with single letters but not so much with comp
 			n_letter = text("[n_letter]")
 		t = text("[t][n_letter]")
 		p=p+n_mod
-	return sanitize(copytext(t,1,MAX_MESSAGE_LEN))
+	return sanitize(t)
 
 
 /proc/shake_camera(mob/M, duration, strength=1)
-	if(!M || !M.client || M.shakecamera)
+	if(!M || !M.client || M.shakecamera || M.stat || isEye(M) || isAI(M))
 		return
 	M.shakecamera = 1
 	spawn(1)
@@ -365,7 +298,7 @@ It's fairly easy to fix if dealing with single letters but not so much with comp
 
 		var/atom/oldeye=M.client.eye
 		var/aiEyeFlag = 0
-		if(istype(oldeye, /mob/aiEye))
+		if(istype(oldeye, /mob/eye/aiEye))
 			aiEyeFlag = 1
 
 		var/x
@@ -396,29 +329,29 @@ It's fairly easy to fix if dealing with single letters but not so much with comp
 	return 0
 
 //converts intent-strings into numbers and back
-var/list/intents = list("help","disarm","grab","hurt")
+var/list/intents = list(I_HELP,I_DISARM,I_GRAB,I_HURT)
 /proc/intent_numeric(argument)
 	if(istext(argument))
 		switch(argument)
-			if("help")		return 0
-			if("disarm")	return 1
-			if("grab")		return 2
+			if(I_HELP)		return 0
+			if(I_DISARM)	return 1
+			if(I_GRAB)		return 2
 			else			return 3
 	else
 		switch(argument)
-			if(0)			return "help"
-			if(1)			return "disarm"
-			if(2)			return "grab"
-			else			return "hurt"
+			if(0)			return I_HELP
+			if(1)			return I_DISARM
+			if(2)			return I_GRAB
+			else			return I_HURT
 
 //change a mob's act-intent. Input the intent as a string such as "help" or use "right"/"left
 /mob/verb/a_intent_change(input as text)
 	set name = "a-intent"
 	set hidden = 1
 
-	if(ishuman(src) || isbrain(src))
+	if(ishuman(src) || isbrain(src) || isslime(src))
 		switch(input)
-			if("help","disarm","grab","hurt")
+			if(I_HELP,I_DISARM,I_GRAB,I_HURT)
 				a_intent = input
 			if("right")
 				a_intent = intent_numeric((intent_numeric(a_intent)+1) % 4)
@@ -427,19 +360,19 @@ var/list/intents = list("help","disarm","grab","hurt")
 		if(hud_used && hud_used.action_intent)
 			hud_used.action_intent.icon_state = "intent_[a_intent]"
 
-	else if(isrobot(src) || ismonkey(src))
+	else if(isrobot(src))
 		switch(input)
-			if("help")
-				a_intent = "help"
-			if("hurt")
-				a_intent = "hurt"
+			if(I_HELP)
+				a_intent = I_HELP
+			if(I_HURT)
+				a_intent = I_HURT
 			if("right","left")
 				a_intent = intent_numeric(intent_numeric(a_intent) - 3)
 		if(hud_used && hud_used.action_intent)
-			if(a_intent == "hurt")
-				hud_used.action_intent.icon_state = "harm"
+			if(a_intent == I_HURT)
+				hud_used.action_intent.icon_state = I_HURT
 			else
-				hud_used.action_intent.icon_state = "help"
+				hud_used.action_intent.icon_state = I_HELP
 
 proc/is_blind(A)
 	if(istype(A, /mob/living/carbon))
@@ -495,9 +428,9 @@ proc/is_blind(A)
 			var/lname
 			if(subject)
 				if(subject != M)
-					follow = "(<a href='byond://?src=\ref[M];track=\ref[subject]'>follow</a>) "
+					follow = "([ghost_follow_link(subject, M)]) "
 				if(M.stat != DEAD && M.client.holder)
-					follow = "(<a href='?src=\ref[M.client.holder];adminplayerobservejump=\ref[subject]'>JMP</a>) "
+					follow = "([admin_jump_link(subject, M.client.holder)]) "
 				var/mob/dead/observer/DM
 				if(istype(subject, /mob/dead/observer))
 					DM = subject
@@ -547,3 +480,109 @@ proc/is_blind(A)
 			say_dead_direct("The ghost of <span class='name'>[name]</span> now [pick("skulks","lurks","prowls","creeps","stalks")] among the dead. [message]")
 		else
 			say_dead_direct("<span class='name'>[name]</span> no longer [pick("skulks","lurks","prowls","creeps","stalks")] in the realm of the dead. [message]")
+
+/mob/proc/switch_to_camera(var/obj/machinery/camera/C)
+	if (!C.can_use() || stat || (get_dist(C, src) > 1 || machine != src || blinded || !canmove))
+		return 0
+	check_eye(src)
+	return 1
+
+/mob/living/silicon/ai/switch_to_camera(var/obj/machinery/camera/C)
+	if(!C.can_use() || !is_in_chassis())
+		return 0
+
+	eyeobj.setLoc(C)
+	return 1
+
+// Returns true if the mob has a client which has been active in the last given X minutes.
+/mob/proc/is_client_active(var/active = 1)
+	return client && client.inactivity < active MINUTES
+
+/mob/proc/can_eat()
+	return 1
+
+/mob/proc/can_force_feed()
+	return 1
+
+#define SAFE_PERP -50
+/mob/living/proc/assess_perp(var/obj/access_obj, var/check_access, var/auth_weapons, var/check_records, var/check_arrest)
+	if(stat == DEAD)
+		return SAFE_PERP
+
+	return 0
+
+/mob/living/carbon/assess_perp(var/obj/access_obj, var/check_access, var/auth_weapons, var/check_records, var/check_arrest)
+	if(handcuffed)
+		return SAFE_PERP
+
+	return ..()
+
+/mob/living/carbon/human/assess_perp(var/obj/access_obj, var/check_access, var/auth_weapons, var/check_records, var/check_arrest)
+	var/threatcount = ..()
+	if(. == SAFE_PERP)
+		return SAFE_PERP
+
+	//Agent cards lower threatlevel.
+	var/obj/item/weapon/card/id/id = GetIdCard()
+	if(id && istype(id, /obj/item/weapon/card/id/syndicate))
+		threatcount -= 2
+	// A proper	CentCom id is hard currency.
+	else if(id && istype(id, /obj/item/weapon/card/id/centcom))
+		return SAFE_PERP
+
+	if(check_access && !access_obj.allowed(src))
+		threatcount += 4
+
+	if(auth_weapons && !access_obj.allowed(src))
+		if(istype(l_hand, /obj/item/weapon/gun) || istype(l_hand, /obj/item/weapon/melee))
+			threatcount += 4
+
+		if(istype(r_hand, /obj/item/weapon/gun) || istype(r_hand, /obj/item/weapon/melee))
+			threatcount += 4
+
+		if(istype(belt, /obj/item/weapon/gun) || istype(belt, /obj/item/weapon/melee))
+			threatcount += 2
+
+		if(species.name != "Human")
+			threatcount += 2
+
+	if(check_records || check_arrest)
+		var/perpname = name
+		if(id)
+			perpname = id.registered_name
+
+		var/datum/data/record/R = find_security_record("name", perpname)
+		if(check_records && !R)
+			threatcount += 4
+
+		if(check_arrest && R && (R.fields["criminal"] == "*Arrest*"))
+			threatcount += 4
+
+	return threatcount
+
+/mob/living/simple_animal/hostile/assess_perp(var/obj/access_obj, var/check_access, var/auth_weapons, var/check_records, var/check_arrest)
+	var/threatcount = ..()
+	if(. == SAFE_PERP)
+		return SAFE_PERP
+
+	if(!istype(src, /mob/living/simple_animal/hostile/retaliate/goat))
+		threatcount += 4
+	return threatcount
+
+#undef SAFE_PERP
+
+/mob/proc/get_multitool(var/obj/item/device/multitool/P)
+	if(istype(P))
+		return P
+
+mob/dead/observer/get_multitool()
+	return can_admin_interact() && ..(ghost_multitool)
+
+/mob/living/carbon/human/get_multitool()
+	return ..(get_active_hand())
+
+/mob/living/silicon/robot/get_multitool()
+	return ..(get_active_hand())
+
+/mob/living/silicon/ai/get_multitool()
+	return ..(aiMulti)

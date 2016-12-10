@@ -24,26 +24,49 @@
 	desc = "It's just an ordinary box."
 	icon_state = "box"
 	item_state = "syringe_kit"
-	foldable = /obj/item/stack/sheet/cardboard	//BubbleWrap
+	var/foldable = /obj/item/stack/material/cardboard	// BubbleWrap - if set, can be folded (when empty) into a sheet of cardboard
+
+// BubbleWrap - A box can be folded up to make card
+/obj/item/weapon/storage/box/attack_self(mob/user as mob)
+	if(..()) return
+
+	//try to fold it.
+	if ( contents.len )
+		return
+
+	if ( !ispath(src.foldable) )
+		return
+	var/found = 0
+	// Close any open UI windows first
+	for(var/mob/M in range(1))
+		if (M.s_active == src)
+			src.close(M)
+		if ( M == user )
+			found = 1
+	if ( !found )	// User is too far away
+		return
+	// Now make the cardboard
+	user << "<span class='notice'>You fold [src] flat.</span>"
+	new src.foldable(get_turf(src))
+	qdel(src)
 
 /obj/item/weapon/storage/box/survival/
 	New()
 		..()
-		contents = list()
-		sleep(1)
 		new /obj/item/clothing/mask/breath( src )
 		new /obj/item/weapon/tank/emergency_oxygen( src )
-		return
+
+/obj/item/weapon/storage/box/vox/
+	New()
+		..()
+		new /obj/item/clothing/mask/breath( src )
+		new /obj/item/weapon/tank/emergency_nitrogen( src )
 
 /obj/item/weapon/storage/box/engineer/
 	New()
 		..()
-		contents = list()
-		sleep(1)
 		new /obj/item/clothing/mask/breath( src )
 		new /obj/item/weapon/tank/emergency_oxygen/engi( src )
-		return
-
 
 /obj/item/weapon/storage/box/gloves
 	name = "box of latex gloves"
@@ -79,7 +102,6 @@
 /obj/item/weapon/storage/box/syringes
 	name = "box of syringes"
 	desc = "A box full of syringes."
-	desc = "A biohazard alert warning is printed on the box"
 	icon_state = "syringe"
 
 	New()
@@ -91,6 +113,22 @@
 		new /obj/item/weapon/reagent_containers/syringe( src )
 		new /obj/item/weapon/reagent_containers/syringe( src )
 		new /obj/item/weapon/reagent_containers/syringe( src )
+
+/obj/item/weapon/storage/box/syringegun
+	name = "box of syringe gun cartridges"
+	desc = "A box full of compressed gas cartridges."
+	icon_state = "syringe"
+
+	New()
+		..()
+		new /obj/item/weapon/syringe_cartridge( src )
+		new /obj/item/weapon/syringe_cartridge( src )
+		new /obj/item/weapon/syringe_cartridge( src )
+		new /obj/item/weapon/syringe_cartridge( src )
+		new /obj/item/weapon/syringe_cartridge( src )
+		new /obj/item/weapon/syringe_cartridge( src )
+		new /obj/item/weapon/syringe_cartridge( src )
+
 
 /obj/item/weapon/storage/box/beakers
 	name = "box of beakers"
@@ -149,7 +187,7 @@
 		new /obj/item/ammo_casing/shotgun/beanbag(src)
 
 /obj/item/weapon/storage/box/shotgunammo
-	name = "box of shotgun shells"
+	name = "box of shotgun slugs"
 	desc = "It has a picture of a gun and several warning symbols on the front.<br>WARNING: Live ammunition. Misuse may result in serious injury or death."
 
 	New()
@@ -162,9 +200,79 @@
 		new /obj/item/ammo_casing/shotgun(src)
 		new /obj/item/ammo_casing/shotgun(src)
 
+/obj/item/weapon/storage/box/shotgunshells
+	name = "box of shotgun shells"
+	desc = "It has a picture of a gun and several warning symbols on the front.<br>WARNING: Live ammunition. Misuse may result in serious injury or death."
+
+	New()
+		..()
+		new /obj/item/ammo_casing/shotgun/pellet(src)
+		new /obj/item/ammo_casing/shotgun/pellet(src)
+		new /obj/item/ammo_casing/shotgun/pellet(src)
+		new /obj/item/ammo_casing/shotgun/pellet(src)
+		new /obj/item/ammo_casing/shotgun/pellet(src)
+		new /obj/item/ammo_casing/shotgun/pellet(src)
+		new /obj/item/ammo_casing/shotgun/pellet(src)
+
+/obj/item/weapon/storage/box/flashshells
+	name = "box of illumination shells"
+	desc = "It has a picture of a gun and several warning symbols on the front.<br>WARNING: Live ammunition. Misuse may result in serious injury or death."
+
+	New()
+		..()
+		new /obj/item/ammo_casing/shotgun/flash(src)
+		new /obj/item/ammo_casing/shotgun/flash(src)
+		new /obj/item/ammo_casing/shotgun/flash(src)
+		new /obj/item/ammo_casing/shotgun/flash(src)
+		new /obj/item/ammo_casing/shotgun/flash(src)
+		new /obj/item/ammo_casing/shotgun/flash(src)
+		new /obj/item/ammo_casing/shotgun/flash(src)
+
+/obj/item/weapon/storage/box/stunshells
+	name = "box of stun shells"
+	desc = "It has a picture of a gun and several warning symbols on the front.<br>WARNING: Live ammunition. Misuse may result in serious injury or death."
+
+	New()
+		..()
+		new /obj/item/ammo_casing/shotgun/stunshell(src)
+		new /obj/item/ammo_casing/shotgun/stunshell(src)
+		new /obj/item/ammo_casing/shotgun/stunshell(src)
+		new /obj/item/ammo_casing/shotgun/stunshell(src)
+		new /obj/item/ammo_casing/shotgun/stunshell(src)
+		new /obj/item/ammo_casing/shotgun/stunshell(src)
+		new /obj/item/ammo_casing/shotgun/stunshell(src)
+
+/obj/item/weapon/storage/box/practiceshells
+	name = "box of practice shells"
+	desc = "It has a picture of a gun and several warning symbols on the front.<br>WARNING: Live ammunition. Misuse may result in serious injury or death."
+
+	New()
+		..()
+		new /obj/item/ammo_casing/shotgun/practice(src)
+		new /obj/item/ammo_casing/shotgun/practice(src)
+		new /obj/item/ammo_casing/shotgun/practice(src)
+		new /obj/item/ammo_casing/shotgun/practice(src)
+		new /obj/item/ammo_casing/shotgun/practice(src)
+		new /obj/item/ammo_casing/shotgun/practice(src)
+		new /obj/item/ammo_casing/shotgun/practice(src)
+
+/obj/item/weapon/storage/box/sniperammo
+	name = "box of 14.5mm shells"
+	desc = "It has a picture of a gun and several warning symbols on the front.<br>WARNING: Live ammunition. Misuse may result in serious injury or death."
+
+	New()
+		..()
+		new /obj/item/ammo_casing/a145(src)
+		new /obj/item/ammo_casing/a145(src)
+		new /obj/item/ammo_casing/a145(src)
+		new /obj/item/ammo_casing/a145(src)
+		new /obj/item/ammo_casing/a145(src)
+		new /obj/item/ammo_casing/a145(src)
+		new /obj/item/ammo_casing/a145(src)
+
 /obj/item/weapon/storage/box/flashbangs
-	name = "box of flashbangs (WARNING)"
-	desc = "<B>WARNING: These devices are extremely dangerous and can cause blindness or deafness in repeated use.</B>"
+	name = "box of flashbangs"
+	desc = "A box containing 7 antipersonnel flashbang grenades.<br> WARNING: These devices are extremely dangerous and can cause blindness or deafness in repeated use."
 	icon_state = "flashbang"
 
 	New()
@@ -176,10 +284,26 @@
 		new /obj/item/weapon/grenade/flashbang(src)
 		new /obj/item/weapon/grenade/flashbang(src)
 		new /obj/item/weapon/grenade/flashbang(src)
+
+/obj/item/weapon/storage/box/teargas
+	name = "box of pepperspray grenades"
+	desc = "A box containing 7 tear gas grenades. A gas mask is printed on the label.<br> WARNING: Exposure carries risk of serious injury or death. Keep away from persons with lung conditions."
+	icon_state = "flashbang"
+
+	New()
+		..()
+		new /obj/item/weapon/grenade/chem_grenade/teargas(src)
+		new /obj/item/weapon/grenade/chem_grenade/teargas(src)
+		new /obj/item/weapon/grenade/chem_grenade/teargas(src)
+		new /obj/item/weapon/grenade/chem_grenade/teargas(src)
+		new /obj/item/weapon/grenade/chem_grenade/teargas(src)
+		new /obj/item/weapon/grenade/chem_grenade/teargas(src)
+
+
 
 /obj/item/weapon/storage/box/emps
 	name = "box of emp grenades"
-	desc = "A box with 5 emp grenades."
+	desc = "A box containing 5 military grade EMP grenades.<br> WARNING: Do not use near unshielded electronics or biomechanical augmentations, death or permanent paralysis may occur."
 	icon_state = "flashbang"
 
 	New()
@@ -190,6 +314,31 @@
 		new /obj/item/weapon/grenade/empgrenade(src)
 		new /obj/item/weapon/grenade/empgrenade(src)
 
+/obj/item/weapon/storage/box/smokes
+	name = "box of smoke bombs"
+	desc = "A box containing 5 smoke bombs."
+	icon_state = "flashbang"
+
+/obj/item/weapon/storage/box/smokes/New()
+		..()
+		new /obj/item/weapon/grenade/smokebomb(src)
+		new /obj/item/weapon/grenade/smokebomb(src)
+		new /obj/item/weapon/grenade/smokebomb(src)
+		new /obj/item/weapon/grenade/smokebomb(src)
+		new /obj/item/weapon/grenade/smokebomb(src)
+
+/obj/item/weapon/storage/box/anti_photons
+	name = "box of anti-photon grenades"
+	desc = "A box containing 5 experimental photon disruption grenades."
+	icon_state = "flashbang"
+
+/obj/item/weapon/storage/box/anti_photons/New()
+		..()
+		new /obj/item/weapon/grenade/anti_photon(src)
+		new /obj/item/weapon/grenade/anti_photon(src)
+		new /obj/item/weapon/grenade/anti_photon(src)
+		new /obj/item/weapon/grenade/anti_photon(src)
+		new /obj/item/weapon/grenade/anti_photon(src)
 
 /obj/item/weapon/storage/box/trackimp
 	name = "boxed tracking implant kit"
@@ -310,13 +459,26 @@
 		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket(src)
 		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket(src)
 
+/obj/item/weapon/storage/box/sinpockets
+	name = "box of sin-pockets"
+	desc = "<B>Instructions:</B> <I>Crush bottom of package to initiate chemical heating. Wait for 20 seconds before consumption. Product will cool if not eaten within seven minutes.</I>"
+	icon_state = "donk_kit"
+
+	New()
+		..()
+		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket/sinpocket(src)
+		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket/sinpocket(src)
+		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket/sinpocket(src)
+		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket/sinpocket(src)
+		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket/sinpocket(src)
+		new /obj/item/weapon/reagent_containers/food/snacks/donkpocket/sinpocket(src)
+
 /obj/item/weapon/storage/box/monkeycubes
 	name = "monkey cube box"
 	desc = "Drymate brand monkey cubes. Just add water!"
 	icon = 'icons/obj/food.dmi'
 	icon_state = "monkeycubebox"
-	storage_slots = 7
-	can_hold = list("/obj/item/weapon/reagent_containers/food/snacks/monkeycube")
+	can_hold = list(/obj/item/weapon/reagent_containers/food/snacks/monkeycube)
 	New()
 		..()
 		if(src.type == /obj/item/weapon/storage/box/monkeycubes)
@@ -429,11 +591,10 @@
 	desc = "Eight wrappers of fun! Ages 8 and up. Not suitable for children."
 	icon = 'icons/obj/toy.dmi'
 	icon_state = "spbox"
-	storage_slots = 8
-	can_hold = list("/obj/item/toy/snappop")
+	can_hold = list(/obj/item/toy/snappop)
 	New()
 		..()
-		for(var/i=1; i <= storage_slots; i++)
+		for(var/i=1; i <= 8; i++)
 			new /obj/item/toy/snappop(src)
 
 /obj/item/weapon/storage/box/matches
@@ -442,14 +603,13 @@
 	icon = 'icons/obj/cigarettes.dmi'
 	icon_state = "matchbox"
 	item_state = "zippo"
-	storage_slots = 10
 	w_class = 1
 	slot_flags = SLOT_BELT
-	can_hold = list("/obj/item/weapon/flame/match")
+	can_hold = list(/obj/item/weapon/flame/match)
 
 	New()
 		..()
-		for(var/i=1; i <= storage_slots; i++)
+		for(var/i=1; i <= 10; i++)
 			new /obj/item/weapon/flame/match(src)
 
 	attackby(obj/item/weapon/flame/match/W as obj, mob/user as mob)
@@ -467,7 +627,7 @@
 	icon_state = "syringe"
 	New()
 		..()
-		for (var/i; i < storage_slots; i++)
+		for (var/i; i < 7; i++)
 			new /obj/item/weapon/reagent_containers/hypospray/autoinjector(src)
 
 /obj/item/weapon/storage/box/lights
@@ -476,33 +636,44 @@
 	icon_state = "light"
 	desc = "This box is shaped on the inside so that only light tubes and bulbs fit."
 	item_state = "syringe_kit"
-	foldable = /obj/item/stack/sheet/cardboard //BubbleWrap
-	storage_slots=21
-	can_hold = list("/obj/item/weapon/light/tube", "/obj/item/weapon/light/bulb")
-	max_combined_w_class = 42	//holds 21 items of w_class 2
 	use_to_pickup = 1 // for picking up broken bulbs, not that most people will try
 
-/obj/item/weapon/storage/box/lights/bulbs/New()
+/obj/item/weapon/storage/box/lights/New()
 	..()
+	make_exact_fit()
+
+/obj/item/weapon/storage/box/lights/bulbs/New()
 	for(var/i = 0; i < 21; i++)
 		new /obj/item/weapon/light/bulb(src)
+	..()
 
 /obj/item/weapon/storage/box/lights/tubes
 	name = "box of replacement tubes"
 	icon_state = "lighttube"
 
 /obj/item/weapon/storage/box/lights/tubes/New()
-	..()
 	for(var/i = 0; i < 21; i++)
 		new /obj/item/weapon/light/tube(src)
+	..()
 
 /obj/item/weapon/storage/box/lights/mixed
 	name = "box of replacement lights"
 	icon_state = "lightmixed"
 
 /obj/item/weapon/storage/box/lights/mixed/New()
-	..()
 	for(var/i = 0; i < 14; i++)
 		new /obj/item/weapon/light/tube(src)
 	for(var/i = 0; i < 7; i++)
 		new /obj/item/weapon/light/bulb(src)
+	..()
+
+/obj/item/weapon/storage/box/freezer
+	name = "portable freezer"
+	desc = "This nifty shock-resistant device will keep your 'groceries' nice and non-spoiled."
+	icon = 'icons/obj/storage.dmi'
+	icon_state = "portafreezer"
+	item_state = "medicalpack"
+	max_w_class = 3
+	can_hold = list(/obj/item/organ, /obj/item/weapon/reagent_containers/food, /obj/item/weapon/reagent_containers/glass)
+	max_storage_space = 21
+	use_to_pickup = 1 // for picking up broken bulbs, not that most people will try

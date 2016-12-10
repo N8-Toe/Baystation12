@@ -1,5 +1,3 @@
-/var/const/OPEN = 1
-/var/const/CLOSED = 2
 
 #define FIREDOOR_MAX_PRESSURE_DIFF 25 // kPa
 #define FIREDOOR_MAX_TEMP 50 // °C
@@ -22,7 +20,7 @@
 	open_layer = DOOR_OPEN_LAYER - 0.01 // Just below doors when open
 	closed_layer = DOOR_CLOSED_LAYER + 0.01 // Just above doors when closed
 
-	//These are frequenly used with windows, so make sure zones can pass. 
+	//These are frequenly used with windows, so make sure zones can pass.
 	//Generally if a firedoor is at a place where there should be a zone boundery then there will be a regular door underneath it.
 	block_air_zones = 0
 
@@ -56,7 +54,7 @@
 	for(var/obj/machinery/door/firedoor/F in loc)
 		if(F != src)
 			spawn(1)
-				del src
+				qdel(src)
 			return .
 	var/area/A = get_area(src)
 	ASSERT(istype(A))
@@ -70,14 +68,17 @@
 			A.all_doors.Add(src)
 			areas_added += A
 
-/obj/machinery/door/firedoor/Del()
+/obj/machinery/door/firedoor/Destroy()
 	for(var/area/A in areas_added)
 		A.all_doors.Remove(src)
 	. = ..()
 
+/obj/machinery/door/firedoor/get_material()
+	return get_material_by_name(DEFAULT_WALL_MATERIAL)
 
 /obj/machinery/door/firedoor/examine(mob/user)
-	if(!..(user, 1) && !isAI(user))
+	. = ..(user, 1)
+	if(!. || !density)
 		return
 
 	if(pdiff >= FIREDOOR_MAX_PRESSURE_DIFF)
@@ -101,10 +102,7 @@
 			continue
 		var/celsius = convert_k2c(tile_info[index][1])
 		var/pressure = tile_info[index][2]
-		if(dir_alerts[index] & (FIREDOOR_ALERT_HOT|FIREDOOR_ALERT_COLD))
-			o += "<span class='warning'>"
-		else
-			o += "<span style='color:blue'>"
+		o += "<span class='[(dir_alerts[index] & (FIREDOOR_ALERT_HOT|FIREDOOR_ALERT_COLD)) ? "warning" : "color:blue"]'>"
 		o += "[celsius]&deg;C</span> "
 		o += "<span style='color:blue'>"
 		o += "[pressure]kPa</span></li>"
@@ -149,7 +147,7 @@
 	"\The [src]", "Yes, [density ? "open" : "close"]", "No")
 	if(answer == "No")
 		return
-	if(user.stat || user.stunned || user.weakened || user.paralysis || (!user.canmove && !isAI(user)) || (get_dist(src, user) > 1  && !isAI(user)))
+	if(user.incapacitated() || (get_dist(src, user) > 1  && !issilicon(user)))
 		user << "Sorry, you must remain able bodied and close to \the [src] in order to use it."
 		return
 	if(density && (stat & (BROKEN|NOPOWER))) //can still close without power
@@ -169,7 +167,7 @@
 		if(alarmed)
 			// Accountability!
 			users_to_open |= user.name
-			needs_to_close = 1
+			needs_to_close = !issilicon(user)
 		spawn()
 			open()
 	else
@@ -183,7 +181,7 @@
 				if(A.fire || A.air_doors_activated)
 					alarmed = 1
 			if(alarmed)
-				nextstate = CLOSED
+				nextstate = FIREDOOR_CLOSED
 				close()
 
 /obj/machinery/door/firedoor/attackby(obj/item/weapon/C as obj, mob/user as mob)
@@ -230,14 +228,14 @@
 					FA.density = 1
 					FA.wired = 1
 					FA.update_icon()
-					del(src)
+					qdel(src)
 		return
 
 	if(blocked)
 		user << "<span class='danger'>\The [src] is welded shut!</span>"
 		return
 
-	if(istype(C, /obj/item/weapon/crowbar) || istype(C,/obj/item/weapon/twohanded/fireaxe))
+	if(istype(C, /obj/item/weapon/crowbar) || istype(C,/obj/item/weapon/material/twohanded/fireaxe))
 		if(operating)
 			return
 
@@ -247,8 +245,8 @@
 			"You hear someone struggle and metal straining.")
 			return
 
-		if(istype(C,/obj/item/weapon/twohanded/fireaxe))
-			var/obj/item/weapon/twohanded/fireaxe/F = C
+		if(istype(C,/obj/item/weapon/material/twohanded/fireaxe))
+			var/obj/item/weapon/material/twohanded/fireaxe/F = C
 			if(!F.wielded)
 				return
 
@@ -272,7 +270,7 @@
 				spawn(0)
 					close()
 			return
-		
+
 	return ..()
 
 // CHECK PRESSURE
@@ -324,11 +322,11 @@
 	if(operating || !nextstate)
 		return
 	switch(nextstate)
-		if(OPEN)
+		if(FIREDOOR_OPEN)
 			nextstate = null
 
 			open()
-		if(CLOSED)
+		if(FIREDOOR_CLOSED)
 			nextstate = null
 			close()
 	return
@@ -365,6 +363,9 @@
 
 /obj/machinery/door/firedoor/update_icon()
 	overlays.Cut()
+	set_light(0)
+	var/do_set_light = FALSE
+
 	if(density)
 		icon_state = "door_closed"
 		if(hatch_open)
@@ -373,17 +374,21 @@
 			overlays += "welded"
 		if(pdiff_alert)
 			overlays += "palert"
+			do_set_light = TRUE
 		if(dir_alerts)
 			for(var/d=1;d<=4;d++)
 				var/cdir = cardinal[d]
 				for(var/i=1;i<=ALERT_STATES.len;i++)
 					if(dir_alerts[d] & (1<<(i-1)))
 						overlays += new/icon(icon,"alert_[ALERT_STATES[i]]", dir=cdir)
+						do_set_light = TRUE
 	else
 		icon_state = "door_open"
 		if(blocked)
 			overlays += "welded_open"
-	return
+
+	if(do_set_light)
+		set_light(1.5, 0.5, COLOR_SUN)
 
 //These are playing merry hell on ZAS.  Sorry fellas :(
 

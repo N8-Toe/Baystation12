@@ -3,38 +3,39 @@
 	name = "breath mask"
 	icon_state = "breath"
 	item_state = "breath"
-	flags = MASKCOVERSMOUTH | AIRTIGHT
-	body_parts_covered = 0
+	item_flags = AIRTIGHT|FLEXIBLEMATERIAL
+	body_parts_covered = FACE
 	w_class = 2
 	gas_transfer_coefficient = 0.10
 	permeability_coefficient = 0.50
-
-	sprite_sheets = list(
-		"Vox" = 'icons/mob/species/vox/masks.dmi'
-		)
-
 	var/hanging = 0
 
-	verb/toggle()
+/obj/item/clothing/mask/breath/proc/adjust_mask(mob/user)
+	if(user.canmove && !user.stat)
+		src.hanging = !src.hanging
+		if (src.hanging)
+			gas_transfer_coefficient = 1
+			body_parts_covered = body_parts_covered & ~FACE
+			item_flags = item_flags & ~AIRTIGHT
+			icon_state = "breathdown"
+			user << "Your mask is now hanging on your neck."
+		else
+			gas_transfer_coefficient = initial(gas_transfer_coefficient)
+			body_parts_covered = initial(body_parts_covered)
+			item_flags = initial(item_flags)
+			icon_state = initial(icon_state)
+			user << "You pull the mask up to cover your face."
+		update_clothing_icon()
+
+/obj/item/clothing/mask/breath/attack_self(mob/user)
+	adjust_mask(user)
+
+/obj/item/clothing/mask/breath/verb/toggle()
 		set category = "Object"
 		set name = "Adjust mask"
 		set src in usr
 
-		if(usr.canmove && !usr.stat && !usr.restrained())
-			if(!src.hanging)
-				src.hanging = !src.hanging
-				gas_transfer_coefficient = 1 //gas is now escaping to the turf and vice versa
-				flags &= ~(MASKCOVERSMOUTH | AIRTIGHT)
-				icon_state = "breathdown"
-				usr << "Your mask is now hanging on your neck."
-
-			else
-				src.hanging = !src.hanging
-				gas_transfer_coefficient = 0.10
-				flags |= MASKCOVERSMOUTH | AIRTIGHT
-				icon_state = "breath"
-				usr << "You pull the mask up to cover your face."
-			update_clothing_icon()
+		adjust_mask(usr)
 
 /obj/item/clothing/mask/breath/medical
 	desc = "A close-fitting sterile mask that can be connected to an air supply."

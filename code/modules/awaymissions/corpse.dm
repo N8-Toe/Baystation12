@@ -59,7 +59,6 @@
 		M.equip_to_slot_or_del(new src.corpseback(M), slot_back)
 	if(src.corpseid == 1)
 		var/obj/item/weapon/card/id/W = new(M)
-		W.name = "[M.real_name]'s ID Card"
 		var/datum/job/jobdatum
 		for(var/jobtype in typesof(/datum/job))
 			var/datum/job/J = new jobtype
@@ -75,9 +74,9 @@
 				W.access = list()
 		if(corpseidjob)
 			W.assignment = corpseidjob
-		W.registered_name = M.real_name
+		M.set_id_info(W)
 		M.equip_to_slot_or_del(W, slot_wear_id)
-	del(src)
+	qdel(src)
 
 
 
@@ -223,7 +222,7 @@
 	corpsesuit = /obj/item/clothing/suit/armor/bulletproof
 	corpseradio = /obj/item/device/radio/headset/heads/captain
 	corpseglasses = /obj/item/clothing/glasses/eyepatch
-	corpsemask = /obj/item/clothing/mask/cigarette/cigar/cohiba
+	corpsemask = /obj/item/clothing/mask/smokable/cigarette/cigar/cohiba
 	corpsehelmet = /obj/item/clothing/head/centhat
 	corpsegloves = /obj/item/clothing/gloves/swat
 	corpseshoes = /obj/item/clothing/shoes/swat

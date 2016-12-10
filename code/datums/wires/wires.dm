@@ -46,6 +46,10 @@ var/list/wireColours = list("red", "blue", "green", "darkred", "orange", "brown"
 			var/list/wires = same_wires[holder_type]
 			src.wires = wires // Reference the wires list.
 
+/datum/wires/Destroy()
+	holder = null
+	return ..()
+
 /datum/wires/proc/GenerateWires()
 	var/list/colours_to_pick = wireColours.Copy() // Get a copy, not a reference.
 	var/list/indexes_to_pick = list()
@@ -278,6 +282,11 @@ var/const/POWER = 8
 	var/r = rand(1, wires.len)
 	CutWireIndex(r)
 
+/datum/wires/proc/RandomCutAll(var/probability = 10)
+	for(var/i = 1; i < MAX_FLAG && i < (1 << wire_count); i += i)
+		if(prob(probability))
+			CutWireIndex(i)
+
 /datum/wires/proc/CutAll()
 	for(var/i = 1; i < MAX_FLAG && i < (1 << wire_count); i += i)
 		CutWireIndex(i)
@@ -286,6 +295,11 @@ var/const/POWER = 8
 	if(wires_status == (1 << wire_count) - 1)
 		return 1
 	return 0
+
+/datum/wires/proc/MendAll()
+	for(var/i = 1; i < MAX_FLAG && i < (1 << wire_count); i += i)
+		if(IsIndexCut(i))
+			CutWireIndex(i)
 
 //
 //Shuffle and Mend

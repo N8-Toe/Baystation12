@@ -33,7 +33,7 @@ var/list/global_huds = list(
 	screen.screen_loc = "1,1"
 	screen.icon = 'icons/obj/hud_full.dmi'
 	screen.icon_state = icon_state
-	screen.layer = 17
+	screen.layer = SCREEN_LAYER
 	screen.mouse_opacity = 0
 
 	return screen
@@ -41,14 +41,14 @@ var/list/global_huds = list(
 /datum/global_hud/New()
 	//420erryday psychedellic colours screen overlay for when you are high
 	druggy = new /obj/screen()
-	druggy.screen_loc = "WEST,SOUTH to EAST,NORTH"
+	druggy.screen_loc = ui_entire_screen
 	druggy.icon_state = "druggy"
 	druggy.layer = 17
 	druggy.mouse_opacity = 0
 
 	//that white blurry effect you get when you eyes are damaged
 	blurry = new /obj/screen()
-	blurry.screen_loc = "WEST,SOUTH to EAST,NORTH"
+	blurry.screen_loc = ui_entire_screen
 	blurry.icon_state = "blurry"
 	blurry.layer = 17
 	blurry.mouse_opacity = 0
@@ -74,21 +74,21 @@ var/list/global_huds = list(
 	//welding mask overlay black/dither
 	darkMask = newlist(/obj/screen, /obj/screen, /obj/screen, /obj/screen, /obj/screen, /obj/screen, /obj/screen, /obj/screen)
 	O = darkMask[1]
-	O.screen_loc = "3,3 to 5,13"
+	O.screen_loc = "WEST+2,SOUTH+2 to WEST+4,NORTH-2"
 	O = darkMask[2]
-	O.screen_loc = "5,3 to 10,5"
+	O.screen_loc = "WEST+4,SOUTH+2 to EAST-5,SOUTH+4"
 	O = darkMask[3]
-	O.screen_loc = "6,11 to 10,13"
+	O.screen_loc = "WEST+5,NORTH-4 to EAST-5,NORTH-2"
 	O = darkMask[4]
-	O.screen_loc = "11,3 to 13,13"
+	O.screen_loc = "EAST-4,SOUTH+2 to EAST-2,NORTH-2"
 	O = darkMask[5]
-	O.screen_loc = "1,1 to 15,2"
+	O.screen_loc = "WEST,SOUTH to EAST,SOUTH+1"
 	O = darkMask[6]
-	O.screen_loc = "1,3 to 2,15"
+	O.screen_loc = "WEST,SOUTH+2 to WEST+1,NORTH"
 	O = darkMask[7]
-	O.screen_loc = "14,3 to 15,15"
+	O.screen_loc = "EAST-1,SOUTH+2 to EAST,NORTH"
 	O = darkMask[8]
-	O.screen_loc = "3,14 to 13,15"
+	O.screen_loc = "WEST+2,NORTH-1 to EAST-2,NORTH"
 
 	for(i = 1, i <= 4, i++)
 		O = vimpaired[i]
@@ -133,12 +133,32 @@ var/list/global_huds = list(
 	var/list/other
 	var/list/obj/screen/hotkeybuttons
 
-	var/list/obj/screen/item_action/item_action_list = list()	//Used for the item action ui buttons.
+	var/obj/screen/movable/action_button/hide_toggle/hide_actions_toggle
+	var/action_buttons_hidden = 0
 
 datum/hud/New(mob/owner)
 	mymob = owner
 	instantiate()
 	..()
+
+/datum/hud/Destroy()
+	..()
+	grab_intent = null
+	hurt_intent = null
+	disarm_intent = null
+	help_intent = null
+	lingchemdisplay = null
+	blobpwrdisplay = null
+	blobhealthdisplay = null
+	r_hand_hud_object = null
+	l_hand_hud_object = null
+	action_intent = null
+	move_intent = null
+	adding = null
+	other = null
+	hotkeybuttons = null
+//	item_action_list = null // ?
+	mymob = null
 
 /datum/hud/proc/hidden_inventory_update()
 	if(!mymob) return
@@ -233,80 +253,106 @@ datum/hud/New(mob/owner)
 	var/ui_color = mymob.client.prefs.UI_style_color
 	var/ui_alpha = mymob.client.prefs.UI_style_alpha
 
-	if(ishuman(mymob))
-		human_hud(ui_style, ui_color, ui_alpha, mymob) // Pass the player the UI style chosen in preferences
-	else if(ismonkey(mymob))
-		monkey_hud(ui_style)
-	else if(isbrain(mymob))
-		brain_hud(ui_style)
-	else if(isalien(mymob))
-		larva_hud()
-	else if(isAI(mymob))
-		ai_hud()
-	else if(isrobot(mymob))
-		robot_hud()
-	else if(isobserver(mymob))
-		ghost_hud()
+	mymob.instantiate_hud(src, ui_style, ui_color, ui_alpha)
 
+/mob/proc/instantiate_hud(var/datum/hud/HUD, var/ui_style, var/ui_color, var/ui_alpha)
+	return
 
 //Triggered when F12 is pressed (Unless someone changed something in the DMF)
 /mob/verb/button_pressed_F12(var/full = 0 as null)
 	set name = "F12"
 	set hidden = 1
 
-	if(hud_used)
-		if(ishuman(src))
-			if(!client) return
-			if(client.view != world.view)
-				return
-			if(hud_used.hud_shown)
-				hud_used.hud_shown = 0
-				if(src.hud_used.adding)
-					src.client.screen -= src.hud_used.adding
-				if(src.hud_used.other)
-					src.client.screen -= src.hud_used.other
-				if(src.hud_used.hotkeybuttons)
-					src.client.screen -= src.hud_used.hotkeybuttons
-				if(src.hud_used.item_action_list)
-					src.client.screen -= src.hud_used.item_action_list
+	if(!hud_used)
+		usr << "<span class='warning'>This mob type does not use a HUD.</span>"
+		return
 
-				//Due to some poor coding some things need special treatment:
-				//These ones are a part of 'adding', 'other' or 'hotkeybuttons' but we want them to stay
-				if(!full)
-					src.client.screen += src.hud_used.l_hand_hud_object	//we want the hands to be visible
-					src.client.screen += src.hud_used.r_hand_hud_object	//we want the hands to be visible
-					src.client.screen += src.hud_used.action_intent		//we want the intent swticher visible
-					src.hud_used.action_intent.screen_loc = ui_acti_alt	//move this to the alternative position, where zone_select usually is.
-				else
-					src.client.screen -= src.healths
-					src.client.screen -= src.internals
-					src.client.screen -= src.gun_setting_icon
+	if(!ishuman(src))
+		usr << "<span class='warning'>Inventory hiding is currently only supported for human mobs, sorry.</span>"
+		return
 
-				//These ones are not a part of 'adding', 'other' or 'hotkeybuttons' but we want them gone.
-				src.client.screen -= src.zone_sel	//zone_sel is a mob variable for some reason.
+	if(!client) return
+	if(client.view != world.view)
+		return
+	if(hud_used.hud_shown)
+		hud_used.hud_shown = 0
+		if(src.hud_used.adding)
+			src.client.screen -= src.hud_used.adding
+		if(src.hud_used.other)
+			src.client.screen -= src.hud_used.other
+		if(src.hud_used.hotkeybuttons)
+			src.client.screen -= src.hud_used.hotkeybuttons
 
-			else
-				hud_used.hud_shown = 1
-				if(src.hud_used.adding)
-					src.client.screen += src.hud_used.adding
-				if(src.hud_used.other && src.hud_used.inventory_shown)
-					src.client.screen += src.hud_used.other
-				if(src.hud_used.hotkeybuttons && !src.hud_used.hotkey_ui_hidden)
-					src.client.screen += src.hud_used.hotkeybuttons
-				if(src.healths)
-					src.client.screen |= src.healths
-				if(src.internals)
-					src.client.screen |= src.internals
-				if(src.gun_setting_icon)
-					src.client.screen |= src.gun_setting_icon
-
-				src.hud_used.action_intent.screen_loc = ui_acti //Restore intent selection to the original position
-				src.client.screen += src.zone_sel				//This one is a special snowflake
-
-			hud_used.hidden_inventory_update()
-			hud_used.persistant_inventory_update()
-			update_action_buttons()
+		//Due to some poor coding some things need special treatment:
+		//These ones are a part of 'adding', 'other' or 'hotkeybuttons' but we want them to stay
+		if(!full)
+			src.client.screen += src.hud_used.l_hand_hud_object	//we want the hands to be visible
+			src.client.screen += src.hud_used.r_hand_hud_object	//we want the hands to be visible
+			src.client.screen += src.hud_used.action_intent		//we want the intent swticher visible
+			src.hud_used.action_intent.screen_loc = ui_acti_alt	//move this to the alternative position, where zone_select usually is.
 		else
-			usr << "\red Inventory hiding is currently only supported for human mobs, sorry."
+			src.client.screen -= src.healths
+			src.client.screen -= src.internals
+			src.client.screen -= src.gun_setting_icon
+
+		//These ones are not a part of 'adding', 'other' or 'hotkeybuttons' but we want them gone.
+		src.client.screen -= src.zone_sel	//zone_sel is a mob variable for some reason.
+
 	else
-		usr << "\red This mob type does not use a HUD."
+		hud_used.hud_shown = 1
+		if(src.hud_used.adding)
+			src.client.screen += src.hud_used.adding
+		if(src.hud_used.other && src.hud_used.inventory_shown)
+			src.client.screen += src.hud_used.other
+		if(src.hud_used.hotkeybuttons && !src.hud_used.hotkey_ui_hidden)
+			src.client.screen += src.hud_used.hotkeybuttons
+		if(src.healths)
+			src.client.screen |= src.healths
+		if(src.internals)
+			src.client.screen |= src.internals
+		if(src.gun_setting_icon)
+			src.client.screen |= src.gun_setting_icon
+
+		src.hud_used.action_intent.screen_loc = ui_acti //Restore intent selection to the original position
+		src.client.screen += src.zone_sel				//This one is a special snowflake
+
+	hud_used.hidden_inventory_update()
+	hud_used.persistant_inventory_update()
+	update_action_buttons()
+
+//Similar to button_pressed_F12() but keeps zone_sel, gun_setting_icon, and healths.
+/mob/proc/toggle_zoom_hud()
+	if(!hud_used)
+		return
+	if(!ishuman(src))
+		return
+	if(!client)
+		return
+	if(client.view != world.view)
+		return
+
+	if(hud_used.hud_shown)
+		hud_used.hud_shown = 0
+		if(src.hud_used.adding)
+			src.client.screen -= src.hud_used.adding
+		if(src.hud_used.other)
+			src.client.screen -= src.hud_used.other
+		if(src.hud_used.hotkeybuttons)
+			src.client.screen -= src.hud_used.hotkeybuttons
+		src.client.screen -= src.internals
+		src.client.screen += src.hud_used.action_intent		//we want the intent swticher visible
+	else
+		hud_used.hud_shown = 1
+		if(src.hud_used.adding)
+			src.client.screen += src.hud_used.adding
+		if(src.hud_used.other && src.hud_used.inventory_shown)
+			src.client.screen += src.hud_used.other
+		if(src.hud_used.hotkeybuttons && !src.hud_used.hotkey_ui_hidden)
+			src.client.screen += src.hud_used.hotkeybuttons
+		if(src.internals)
+			src.client.screen |= src.internals
+		src.hud_used.action_intent.screen_loc = ui_acti //Restore intent selection to the original position
+
+	hud_used.hidden_inventory_update()
+	hud_used.persistant_inventory_update()
+	update_action_buttons()

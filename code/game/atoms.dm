@@ -6,11 +6,14 @@
 	var/list/fingerprintshidden
 	var/fingerprintslast = null
 	var/list/blood_DNA
+	var/was_bloodied
 	var/blood_color
 	var/last_bumped = 0
 	var/pass_flags = 0
 	var/throwpass = 0
 	var/germ_level = GERM_LEVEL_AMBIENT // The higher the germ level, the more germ on the atom.
+	var/simulated = 1 //filter for actions - used by lighting overlays
+	var/fluorescent // Shows up under a UV light.
 
 	///Chemistry.
 	var/datum/reagents/reagents = null
@@ -21,6 +24,9 @@
 
 	//Detective Work, used for the duplicate data points kept in the scanners
 	var/list/original_atom
+
+/atom/proc/reveal_blood()
+	return
 
 /atom/proc/assume_air(datum/gas_mixture/giver)
 	return null
@@ -34,10 +40,12 @@
 	else
 		return null
 
+//return flags that should be added to the viewer's sight var.
+//Otherwise return a negative number to indicate that the view should be cancelled.
 /atom/proc/check_eye(user as mob)
 	if (istype(user, /mob/living/silicon/ai)) // WHYYYY
-		return 1
-	return
+		return 0
+	return -1
 
 /atom/proc/on_reagent_change()
 	return
@@ -60,16 +68,11 @@
 		return flags & INSERT_CONTAINER
 */
 
-
-/atom/proc/meteorhit(obj/meteor as obj)
-	return
-
-/atom/proc/allow_drop()
-	return 1
-
 /atom/proc/CheckExit()
 	return 1
 
+// If you want to use this, the atom must have the PROXMOVE flag, and the moving
+// atom must also have the PROXMOVE flag currently to help with lag. ~ ComicIronic
 /atom/proc/HasProximity(atom/movable/AM as mob|obj)
 	return
 
@@ -142,7 +145,7 @@ its easier to just keep the beam vertical.
 
 		for(var/obj/effect/overlay/beam/O in orange(10,src))	//This section erases the previously drawn beam because I found it was easier to
 			if(O.BeamSource==src)				//just draw another instance of the beam instead of trying to manipulate all the
-				del O							//pieces to a new orientation.
+				qdel(O)							//pieces to a new orientation.
 		var/Angle=round(Get_Angle(src,BeamTarget))
 		var/icon/I=new(icon,icon_state)
 		I.Turn(Angle)
@@ -183,7 +186,7 @@ its easier to just keep the beam vertical.
 			X.pixel_y=Pixel_y
 		sleep(3)	//Changing this to a lower value will cause the beam to follow more smoothly with movement, but it will also be more laggy.
 					//I've found that 3 ticks provided a nice balance for my use.
-	for(var/obj/effect/overlay/beam/O in orange(10,src)) if(O.BeamSource==src) del O
+	for(var/obj/effect/overlay/beam/O in orange(10,src)) if(O.BeamSource==src) qdel(O)
 
 
 //All atoms
@@ -201,9 +204,7 @@ its easier to just keep the beam vertical.
 			f_name += "oil-stained [name][infix]."
 
 	user << "\icon[src] That's [f_name] [suffix]"
-
-	if(desc)
-		user << desc
+	user << desc
 
 	return distance == -1 || (get_dist(src, user) <= distance)
 
@@ -220,10 +221,13 @@ its easier to just keep the beam vertical.
 /atom/proc/ex_act()
 	return
 
-/atom/proc/blob_act()
-	return
+/atom/proc/emag_act(var/remaining_charges, var/mob/user, var/emag_source)
+	return NO_EMAG_ACT
 
 /atom/proc/fire_act()
+	return
+
+/atom/proc/melt()
 	return
 
 /atom/proc/hitby(atom/movable/AM as mob|obj)
@@ -305,7 +309,7 @@ its easier to just keep the beam vertical.
 			fingerprints = list()
 
 		//Hash this shit.
-		var/full_print = md5(H.dna.uni_identity)
+		var/full_print = H.get_full_print()
 
 		// Add the fingerprints
 		//
@@ -355,7 +359,7 @@ its easier to just keep the beam vertical.
 
 	//Cleaning up shit.
 	if(fingerprints && !fingerprints.len)
-		del(fingerprints)
+		qdel(fingerprints)
 	return
 
 
@@ -388,6 +392,7 @@ its easier to just keep the beam vertical.
 	if(!blood_DNA || !istype(blood_DNA, /list))	//if our list of DNA doesn't exist yet (or isn't a list) initialise it.
 		blood_DNA = list()
 
+	was_bloodied = 1
 	blood_color = "#A10808"
 	if(istype(M))
 		if (!istype(M.dna, /datum/dna))
@@ -407,13 +412,14 @@ its easier to just keep the beam vertical.
 		if(toxvomit)
 			this.icon_state = "vomittox_[pick(1,4)]"
 
-
 /atom/proc/clean_blood()
+	if(!simulated)
+		return
+	fluorescent = 0
 	src.germ_level = 0
 	if(istype(blood_DNA, /list))
-		del(blood_DNA)
+		blood_DNA = null
 		return 1
-
 
 /atom/proc/get_global_map_pos()
 	if(!islist(global_map) || isemptylist(global_map)) return
@@ -439,3 +445,46 @@ its easier to just keep the beam vertical.
 		return 1
 	else
 		return 0
+
+// Show a message to all mobs and objects in sight of this atom
+// Use for objects performing visible actions
+// message is output to anyone who can see, e.g. "The [src] does something!"
+// blind_message (optional) is what blind people will hear e.g. "You hear something!"
+/atom/proc/visible_message(var/message, var/blind_message)
+
+	var/list/see = get_mobs_or_objects_in_view(world.view,src) | viewers(get_turf(src), null)
+
+	for(var/I in see)
+		if(isobj(I))
+			spawn(0)
+				if(I) //It's possible that it could be deleted in the meantime.
+					var/obj/O = I
+					O.show_message( message, 1, blind_message, 2)
+		else if(ismob(I))
+			var/mob/M = I
+			if(M.see_invisible >= invisibility) // Cannot view the invisible
+				M.show_message( message, 1, blind_message, 2)
+			else if (blind_message)
+				M.show_message(blind_message, 2)
+
+// Show a message to all mobs and objects in earshot of this atom
+// Use for objects performing audible actions
+// message is the message output to anyone who can hear.
+// deaf_message (optional) is what deaf people will see.
+// hearing_distance (optional) is the range, how many tiles away the message can be heard.
+/atom/proc/audible_message(var/message, var/deaf_message, var/hearing_distance)
+
+	var/range = world.view
+	if(hearing_distance)
+		range = hearing_distance
+	var/list/hear = get_mobs_or_objects_in_view(range,src)
+
+	for(var/I in hear)
+		if(isobj(I))
+			spawn(0)
+				if(I) //It's possible that it could be deleted in the meantime.
+					var/obj/O = I
+					O.show_message( message, 2, deaf_message, 1)
+		else if(ismob(I))
+			var/mob/M = I
+			M.show_message( message, 2, deaf_message, 1)

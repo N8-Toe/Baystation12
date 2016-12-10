@@ -5,6 +5,7 @@
 	icon = 'icons/obj/objects.dmi'
 	icon_state = "target_stake"
 	density = 1
+	w_class = 5
 	flags = CONDUCT
 	var/obj/item/target/pinned_target // the current pinned target
 
@@ -26,7 +27,7 @@
 		if(istype(W, /obj/item/target))
 			density = 0
 			W.density = 1
-			user.drop_item(src)
+			user.remove_from_mob(W)
 			W.loc = loc
 			W.layer = 3.1
 			pinned_target = W

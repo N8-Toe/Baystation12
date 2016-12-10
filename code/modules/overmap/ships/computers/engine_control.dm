@@ -2,7 +2,8 @@
 
 /obj/machinery/computer/engines
 	name = "engine control console"
-	icon_state = "id"
+	icon_keyboard = "tech_key"
+	icon_screen = "id"
 	var/state = "status"
 	var/list/engines = list()
 	var/obj/effect/map/ship/linked
@@ -59,7 +60,7 @@
 
 /obj/machinery/computer/engines/Topic(href, href_list)
 	if(..())
-		return
+		return 1
 
 	if(href_list["state"])
 		state = href_list["state"]

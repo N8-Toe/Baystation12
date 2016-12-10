@@ -4,8 +4,9 @@
 	name = "patient monitoring console"
 	density = 1
 	anchored = 1.0
-	icon_state = "operating"
-	circuit = "/obj/item/weapon/circuitboard/operating"
+	icon_keyboard = "med_key"
+	icon_screen = "crew"
+	circuit = /obj/item/weapon/circuitboard/operating
 	var/mob/living/carbon/human/victim = null
 	var/obj/machinery/optable/table = null
 
@@ -71,7 +72,7 @@
 
 /obj/machinery/computer/operating/Topic(href, href_list)
 	if(..())
-		return
+		return 1
 	if ((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))) || (istype(usr, /mob/living/silicon)))
 		usr.set_machine(src)
 	return

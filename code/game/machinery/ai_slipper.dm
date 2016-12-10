@@ -4,6 +4,8 @@
 	icon_state = "motion0"
 	layer = 3
 	anchored = 1.0
+	use_power = 1
+	idle_power_usage = 10
 	var/uses = 20
 	var/disabled = 1
 	var/lethal = 0
@@ -12,6 +14,7 @@
 	var/cooldown_timeleft = 0
 	var/cooldown_on = 0
 	req_access = list(access_ai_upload)
+
 
 /obj/machinery/ai_slipper/New()
 	..()
@@ -49,7 +52,7 @@
 				if (user.machine==src)
 					src.attack_hand(usr)
 		else
-			user << "\red Access denied."
+			user << "<span class='warning'>Access denied.</span>"
 			return
 	return
 

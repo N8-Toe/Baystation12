@@ -4,7 +4,7 @@
 	desc = "A tube of paste containing swarms of repair nanites. Very effective in repairing robotic machinery."
 	icon = 'icons/obj/nanopaste.dmi'
 	icon_state = "tube"
-	origin_tech = "materials=4;engineering=3"
+	origin_tech = list(TECH_MATERIAL = 4, TECH_ENGINEERING = 3)
 	amount = 10
 
 
@@ -14,6 +14,7 @@
 	if (istype(M,/mob/living/silicon/robot))	//Repairing cyborgs
 		var/mob/living/silicon/robot/R = M
 		if (R.getBruteLoss() || R.getFireLoss() )
+			user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 			R.adjustBruteLoss(-15)
 			R.adjustFireLoss(-15)
 			R.updatehealth()
@@ -25,16 +26,17 @@
 
 	if (istype(M,/mob/living/carbon/human))		//Repairing robolimbs
 		var/mob/living/carbon/human/H = M
-		var/datum/organ/external/S = H.get_organ(user.zone_sel.selecting)
+		var/obj/item/organ/external/S = H.get_organ(user.zone_sel.selecting)
 
 		if(S.open == 1)
 			if (S && (S.status & ORGAN_ROBOT))
 				if(S.get_damage())
+					user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 					S.heal_damage(15, 15, robo_repair = 1)
 					H.updatehealth()
 					use(1)
-					user.visible_message("<span class='notice'>\The [user] applies some nanite paste at[user != M ? " \the [M]'s" : " \the"][S.display_name] with \the [src].</span>",\
-					"<span class='notice'>You apply some nanite paste at [user == M ? "your" : "[M]'s"] [S.display_name].</span>")
+					user.visible_message("<span class='notice'>\The [user] applies some nanite paste at[user != M ? " \the [M]'s" : " \the"][S.name] with \the [src].</span>",\
+					"<span class='notice'>You apply some nanite paste at [user == M ? "your" : "[M]'s"] [S.name].</span>")
 				else
 					user << "<span class='notice'>Nothing to fix here.</span>"
 		else

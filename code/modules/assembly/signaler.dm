@@ -3,8 +3,8 @@
 	desc = "Used to remotely activate devices."
 	icon_state = "signaller"
 	item_state = "signaler"
-	matter = list("metal" = 1000, "glass" = 200, "waste" = 100)
-	origin_tech = "magnets=1"
+	origin_tech = list(TECH_MAGNET = 1)
+	matter = list(DEFAULT_WALL_MATERIAL = 1000, "glass" = 200, "waste" = 100)
 	wires = WIRE_RECEIVE | WIRE_PULSE | WIRE_RADIO_PULSE | WIRE_RADIO_RECEIVE
 
 	secured = 1
@@ -70,7 +70,7 @@
 
 
 	Topic(href, href_list)
-		..()
+		if(..()) return 1
 
 		if(!usr.canmove || usr.stat || usr.restrained() || !in_range(loc, usr))
 			usr << browse(null, "window=radio")
@@ -79,8 +79,8 @@
 
 		if (href_list["freq"])
 			var/new_frequency = (frequency + text2num(href_list["freq"]))
-			if(new_frequency < 1200 || new_frequency > 1600)
-				new_frequency = sanitize_frequency(new_frequency)
+			if(new_frequency < RADIO_LOW_FREQ || new_frequency > RADIO_HIGH_FREQ)
+				new_frequency = sanitize_frequency(new_frequency, RADIO_LOW_FREQ, RADIO_HIGH_FREQ)
 			set_frequency(new_frequency)
 
 		if(href_list["code"])
@@ -141,6 +141,8 @@
 
 
 	proc/set_frequency(new_frequency)
+		if(!frequency)
+			return
 		if(!radio_controller)
 			sleep(20)
 		if(!radio_controller)
@@ -169,4 +171,11 @@
 		set desc = "BOOOOM!"
 		deadman = 1
 		processing_objects.Add(src)
+		log_and_message_admins("is threatening to trigger a signaler deadman's switch")
 		usr.visible_message("\red [usr] moves their finger over [src]'s signal button...")
+
+/obj/item/device/assembly/signaler/Destroy()
+	if(radio_controller)
+		radio_controller.remove_object(src,frequency)
+	frequency = 0
+	..()

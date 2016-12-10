@@ -75,10 +75,10 @@
 
 
 /obj/item/weapon/book/manual/supermatter_engine
-	name = "Supermatter Engine User's Guide"
+	name = "Supermatter Engine Operating Manual"
 	icon_state = "bookSupermatter"
-	author = "Waleed Asad"
-	title = "Supermatter Engine User's Guide"
+	author = "Central Engineering Division"
+	title = "Supermatter Engine Operating Manual"
 
 /obj/item/weapon/book/manual/supermatter_engine/New()
 	..()
@@ -94,95 +94,56 @@
 				</style>
 				</head>
 				<body>
+				<h1>OPERATING MANUAL FOR MK 1 PROTOTYPE THERMOELECTRIC SUPERMATTER ENGINE 'TOMBOLA'</h1>
 				<br>
-				Engineering notes on the single-stage supermatter engine,</br>
-				-Waleed Asad</br></br>
-
-				Station,</br>
-				Exodus</br></br>
-
-				A word of caution, do not enter the engine room for any reason without radiation protection and meson scanners on. The status of the engine may be unpredictable even when you believe it is 'off.' This is an important level of personal protection.</br></br>
-
-				The engine has two basic modes of functionality. It has been observed that it is capable of both a safe level of operation and a modified, high output mode.</br></br>
-
-				<h2>Heat-Primary Mode</h2>
-				<i>Notes on starting the basic function mode</i>
+				<h2>OPERATING PRINCIPLES</h2>
+				<br>
+				<li>The supermatter crystal serves as the fundamental power source of the engine. Upon being charged, it begins to emit large amounts of heat and radiation, as well and oxygen and phoron gas. As oxygen accelerates the reaction, and phoron carries the risk of fire, these must be filtered out. NOTE: Supermatter radiation will not charge radiation collectors.</li>
+				<br>
+				<li>Air in the reactor chamber housing the supermatter is circulated through the reactor loop, which passes through the filters and thermoelectric generators. The thermoelectric generators transfer heat from the reactor loop to the colder radiator loop, thereby generating power. Additional power is generated from internal turbines in the circulators.</li>
+				<br>
+				<li>Air in the radiator loop is circulated through the radiator bank, located in space. This rapidly cools the air, preserving the temperature differential needed for power generation.</li>
+				<br>
+				<li>The MK 1 Prototype Thermoelectric Supermatter Engine is designed to operate at reactor temperatures of 3000K to 4000K and generate up to 1MW of power. Beyond 1MW, the thermoelectric generators will begin to lose power through electrical discharge, reducing efficiency, but additional power generation remains feasible.</li>
+				<br>
+				<li>The crystal structure of the supermatter will begin to liquefy if its temperature exceeds 5000K. This eventually results in a massive release of light, heat and radiation, disintegration of both the supermatter crystal and most of the surrounding area, and as as-of-yet poorly documented psychological effects on all animals within a 2km radius. Appropriate action should be taken to stabilize or eject the supermatter before such occurs.</li>
+				<br>
+				<h2>SUPERMATTER HANDLING</h2>
+				<li>Do not expose supermatter to oxygen.</li>
+				<li>Do not <del>touch supermatter</del> <del>without gloves</del> <del>without exosuit protection</del> allow supermatter to contact any solid object apart from specially-designed supporting pallet.</li>
+				<li>Do not directly view supermatter without meson goggles.</li>
+				<li>While handles on pallet allow moving the supermatter via pulling, pushing should not be attempted.</li>
+				<br>
+				<h2>STARTUP PROCEDURE</h2>
 				<ol>
-				<li><b>Prepare collector arrays</b>: As is standard, begin by wrenching them down, filling six plasma tanks with a plasma canister, and inserting the tank into the collectors one by one. Finally, initialize each collector.</li>
-
-				<li><b>Prepare gas system</b>: Before introducing any gas into the supermatter engine room, it is important to remember the small, but vital steps to preparing this section. First, set the input gas pump and output gas flow pump to 4500 kPa, or maximum flow. Second, switch the digital switching valve into the 'up' position, so the green light is on north side of the valve, in order to circulate the gas back toward the coolers and collectors.</li>
-
-				<li><b>Apply N2 gas</b>: Retrieve the two N2 canisters from storage and bring them to the engine room. Attach one of them to the input section of the engine gas system located next to the collectors. Keep it attached until the N2 pressure is low enough to turn the canister light red. Replace it with the second canister to keep N2 pressure at optimal levels.</li>
-
-				<li><b>Open supermatter shielding</b>: This button is located in the engine room, to the left of the engine monitoring room blast doors. At this point, the supermatter chamber is mostly a gas mixture of N2 and is producing no radiation. It is considered 'safe' up until this point. Do not forget radiation shielding and meson scanners.</li>
-
-				<li><b>Begin primary emitter burst series</b>: Begin by firing four shots into the supermatter using the emitter. It is important to move to this step quickly. The onboard SMES units may not have enough power to run the emitters if left alone too long on-station. This engine can produce enough power on its own to run the entire station, ignoring the SMES units completely, and is wired to do so.</li>
-
-				<li><b>Switch SMES units to primary settings</b>: Maximize input and set the devices to automatically charge, additionally turn their outputs on if they are off unless power is to be saved (Which can be useful in case of later failures).</li>
-
-				<li><b>Begin secondary emitter burst series</b>: Before firing the emitter again, check the power in the line with a multimeter (Do not forget electrical gloves). The engine is running at high efficiency when the value exceeds 200,000 power units.</li>
-
-				<li><b>Maintain engine power</b>: When power in the lines get low, add an additional emitter burst series to bring power to normal levels.</li>
+				<li>Fill reactor loop and radiator loop with two (2) standard canisters of nitrogen gas each.</li>
+				<li>Ensure that pumps and filters are on and operating at maximum power.</li>
+				<li>Fire <del>5</del> <del>15</del> <del>2</del> <del>UNKNOWN</del> 8-12 pulses from emitter at supermatter crystal. Reactor blast doors must be open for this procedure.</li>
 				</ol>
-
-
-				<h2>O2-Reaction Mode</h2>
-
-				The second mode for running the engine uses a gas mixture to produce a reaction within the supermatter. This mode requires the CE's or Atmospheric's help to set up. This is called 'O2-Reaction Mode.'</br></br>
-
-				<b><u>THIS MODE CAN CAUSE A RUNAWAY REACTION, LEADING TO CATASTROPHIC FAILURE IF NOT MAINTAINED. NEVER FORGET ABOUT THE ENGINE IN THIS MODE.</u></b></br></br>
-
-				Additionally, this mode can be used for what is called a '<b>Cold Start</b>.' If the station has no power in the SMES to run the emitters, using this mode will allow enough power output to run them, and quickly reach an acceptable level of power output.</br></br>
-
+				<br>
+				<h2>OPERATION AND MAINTENANCE</h2>
 				<ol>
-				<li><b>Prepare collector arrays</b>: As is standard, begin by wrenching them down, filling six plasma tanks with a plasma canister, and inserting the tank into the collectors one by one. Finally, initialize each collector.</li>
-
-				<li><b>Prepare gas system</b>: Before introducing any gas into the supermatter engine room, it is important to remember the small, but vital steps to preparing this section. First, set the input gas pump and output gas flow pump to 4500 kPa, or maximum flow. Second, switch the digital switching valve into the 'up' position, so the green light is on north side of the valve, in order to circulate the gas back toward the coolers and collectors.</li>
-
-				<li><b>Modify the engine room filters</b>: Unlike the Heat-Primary Mode, it is important to change the filters attached to the gas system to stop filtering O2, and start filtering carbon molecules. O2-Reaction Mode produces far more plasma than Heat-Primary, therefore filtering it off is essential.</li>
-
-				<li><b>Switch SMES units to primary settings</b>: Maximize input and set the devices to automatically charge, additionally turn their outputs on if they are off unless power is to be saved (Which can be useful in case of later failures). If you check the power in the system lines at this point, you will find that it is constantly going up. Indeed, with just the addition of O2 to the supermatter, it will begin outputting power.</li>
-
-				<li><b>Begin primary emitter burst series</b>: Begin by firing four shots into the supermatter using the emitter. Do not over power the supermatter. The reaction is self sustaining and propagating. As long as O2 is in the chamber, it will continue outputting MORE power.</li>
-
-				<li><b>Maintain follow up operations</b>: Remember to check the temperature of the core gas and switch to the Heat-Primary function, or vent the core room when problems begin if required.</li>
-				</ol></br>
-
-				<h2>Notes on Supermatter Reaction Function and Drawbacks</h2>
-
-				After several hours of observation, an interesting phenomenon was witnessed. The supermatter undergoes a constant, self-sustaining reaction when given an extremely high O2 concentration. Anything about 80% or higher typically will cause this reaction. The supermatter will continue to react whenever this gas mixture is in the same room as the supermatter.</br></br>
-
-				To understand why O2-Reaction mode is dangerous, the core principle of the supermatter must be understood. The supermatter emits three things when 'not safe,' that is any time it is giving off power. These things are:</br>
-
-				<ul>
-					<li>Radiation (which is converted into power by the collectors)</li></br>
-					<li>Heat (which is removed via the gas exchange system and coolers)</li></br>
-					<li>External gas (in the form of plasma and O2)</li></br>
-				</ul></br>
-
-				When in Heat-Primary mode, far more heat and plasma are produced than radiation. In O2-Reaction mode, very little heat and only moderate amounts of plasma are produced, however HUGE amounts of energy leaving the supermatter is in the form of radiation.</br></br>
-
-				The O2-Reaction engine mode has a single drawback which has been eluded to more than once so far and that is very simple. The engine room will continue to grow hotter as the constant reaction continues. Eventually, there will be what is called a 'critical gas mixture.' This is the point at which the constant adding of plasma to the mixture of air around the supermatter changes the gas concentration to below the tolerance. When this happens, two things occur. First, the supermatter switches to its primary mode of operation wherein huge amounts of heat are produced by the engine rather than low amounts with high power output. Second, an uncontrollable increase in heat within the supermatter chamber will occur. This will lead to a spark-up, igniting the plasma in the supermatter chamber, wildly increasing both pressure and temperature.</br></br>
-
-				While the O2-Reaction mode is dangerous, it does produce heavy amounts of energy. Consider using this mode only in short amounts to fill the SMES, and switch back later in the shift to keep things flowing normally.</br></br>
-
-
-				<h2>Notes on Supermatter Containment and Emergency Procedures</h2>
-
-				While a constant vigil on the supermatter is not required, regular checkups are important. Check the temperature of gas leaving the supermatter chamber for unsafe levels and ensure that the plasma in the chamber is at a safe concentration. Of course, also make sure the chamber is not on fire. A fire in the core chamber is very difficult to put out. As any toxin scientist can tell you, even low amounts of plasma can burn at very high temperatures. This burning creates a huge increase in pressure and more importantly, temperature of the crystal itself.</br></br>
-
-				The supermatter is strong, but not invincible. When the supermatter is heated too much, its crystal structure will attempt to liquefy. The change in atomic structure of the supermatter leads to a single reaction, a massive explosion. The computer chip attached to the supermatter core will warn the station when stability is threatened. It will then offer a second warning, when things have become dangerously close to total destruction of the core.</br></br>
-
-				Located both within the CE office and engine room is the engine ventilatory control button. This button allows the core vent controls to be accessed, venting the room to space. Remember however, that this process takes time. If a fire is raging, and the pressure is higher than fathomable, it will take a great deal of time to vent the room. Also located in the CE's office is the emergency core eject button. A new core can be ordered from cargo. It is often not worth the lives of the crew to hold on to it, not to mention the structural damage. However, if by some mistake the supermatter is pushed off or removed from the mass driver it sits on, manual reposition will be required. Which is very dangerous and often leads to death.</br></br>
-
-				The supermatter is extremely dangerous. More dangerous than people give it credit for. It can destroy you in an instant, without hesitation, reducing you to a pile of dust. When working closely with supermatter, it is suggested to get a genetic backup and do not wear any items of value to you. The supermatter core can be pulled if grabbed properly by the base, but <b>pushing is not possible.</b></br></br>
-
-
-				<h2>In Closing</h2>
-
-				Remember that the supermatter is dangerous, and the core is dangerous still. Venting the core room is always an option if you are even remotely worried, utilizing Atmospherics to properly ready the room once more for core function. It is always a good idea to check up regularly on the temperature of gas leaving the chamber, as well as the power in the system lines. Lastly, once again remember, never touch the supermatter with anything. Ever.</br></br>
-
-				-Waleed Asad, Senior Engine Technician
+				<li>Ensure that radiation protection and meson goggles are worn at all times while working in the engine room.</li>
+				<li>Ensure that reactor and radiator loops are undamaged and unobstructed.</li>
+				<li>Ensure that phoron and oxygen gas exhaust from filters is properly contained or disposed. Do not allow exhaust pressure to exceed 4500 kPa.</li>
+				<li>Ensure that engine room Area Power Controller (APC) and engine Superconducting Magnetic Energy Storage unit (SMES) are properly charged.</li>
+				<li>Ensure that reactor temperature does not exceed 5000K. In event of reactor temperature exceeding 5000K, see EMERGENCY COOLING PROCEDURE.</li>
+				<li>In event of imminent and/or unavoidable delamination, see EJECTION PROCEDURE.</li>
+				</ol>
+				<br>
+				<h2>EMERGENCY COOLING PROCEDURE</h2>
+				<ol>
+				<li>Open Emergency Cooling Valve 1 and Emergency Cooling Valve 2.</li>
+				<li>When reactor temperature returns to safe operating levels, close Emergency Cooling Valve 1 and Emergency Cooling Valve 2.</li>
+				<li>If reactor temperature does not return to safe operating levels, see EJECTION PROCEDURE.</li>
+				</ol>
+				<br>
+				<h2>EJECTION PROCEDURE</h2>
+				<ol>
+				<li>Press Engine Ventilatory Control button to open engine core vent to space.</li>
+				<li>Press Emergency Core Eject button to eject supermatter crystal. NOTE: Attempting crystal ejection while engine core vent is closed will result in ejection failure.</li>
+				<li>In event of ejection failure, <i>pending</i></li>
+				</ol>
 				</body>
 			</html>"}
 
@@ -412,7 +373,7 @@
 				<body>
 				<center>
 				<br>
-				<b style='font-size: 12px;'>Weyland-Yutani - Building Better Worlds</b>
+				<span style='font-size: 12px;'><b>Weyland-Yutani - Building Better Worlds</b></span>
 				<h1>Autonomous Power Loader Unit \"Ripley\"</h1>
 				</center>
 				<h2>Specifications:</h2>
@@ -423,7 +384,7 @@
 				<li><b>Height:</b> 2.5m</li>
 				<li><b>Width:</b> 1.8m</li>
 				<li><b>Top speed:</b> 5km/hour</li>
-				<li><b>Operation in vacuum/hostile environment:</b> Possible</b>
+				<li><b>Operation in vacuum/hostile environment: Possible</b>
 				<li><b>Airtank volume:</b> 500 liters</li>
 				<li><b>Devices:</b>
 					<ul class="a">
@@ -446,10 +407,10 @@
 					<li>Secure the mainboard with a screwdriver.</li>
 					<li>Install the peripherals control module (Not included. Use supplied datadisk to create one).</li>
 					<li>Secure the peripherals control module with a screwdriver.</li>
-					<li>Install the internal armor plating (Not included due to NanoTrasen regulations. Can be made using 5 metal sheets).</li>
+					<li>Install the internal armor plating (Not included due to corporate regulations. Can be made using 5 metal sheets).</li>
 					<li>Secure the internal armor plating with a wrench.</li>
 					<li>Weld the internal armor plating to the chassis.</li>
-					<li>Install the external reinforced armor plating (Not included due to NanoTrasen regulations. Can be made using 5 reinforced metal sheets).</li>
+					<li>Install the external reinforced armor plating (Not included due to corporate regulations. Can be made using 5 reinforced metal sheets).</li>
 					<li>Secure the external reinforced armor plating with a wrench.</li>
 					<li>Weld the external reinforced armor plating to the chassis.</li>
 				</ol>
@@ -461,7 +422,7 @@
 					<li>Internal armor is plasteel for additional strength.</li>
 					<li>External armor must be installed in 2 parts, totalling 10 sheets.</li>
 					<li>Completed mech is more resilient against fire, and is a bit more durable overall.</li>
-					<li>NanoTrasen is determined to ensure the safety of its <s>investments</s> employees.</li>
+					<li>The Company is determined to ensure the safety of its <s>investments</s> employees.</li>
 				</ul>
 				</body>
 			</html>
@@ -580,7 +541,7 @@
 				This useful piece of equipment will suck power out of the power systems to charge a cyborg's power cell back up to full charge.
 
 				<h3>Robotics Control Console</h3>
-				This useful piece of equipment can be used to immobilize or destroy a cyborg. A word of warning: Cyborgs are expensive pieces of equipment, do not destroy them without good reason, or NanoTrasen may see to it that it never happens again.
+				This useful piece of equipment can be used to immobilize or destroy a cyborg. A word of warning: Cyborgs are expensive pieces of equipment, do not destroy them without good reason, or the Company may see to it that it never happens again.
 
 
 				<h2><a name="Modules">Cyborg Modules</h2>
@@ -727,7 +688,7 @@
 					<li>Expose the cyborg's internal wiring</li>
 					<li>Check to make sure the LawSync and AI Sync lights are lit</li>
 					<li>If they are not lit, pulse the LawSync wire using a multitool to enable the cyborg's LawSync</li>
-					<li>Proceed to a cyborg upload console. NanoTrasen usually places these in the same location as AI upload consoles.</li>
+					<li>Proceed to a cyborg upload console. The Company usually places these in the same location as AI upload consoles.</li>
 					<li>Use a "Reset" upload moduleto reset the cyborg's laws</li>
 					<li>Proceed to a Robotics Control console</li>
 					<li>Remove the lockdown on the cyborg</li>
@@ -735,7 +696,7 @@
 
 				<h3>As a last resort</h3>
 				If all else fails in a case of cyborg-related emergency, there may be only one option. Using a Robotics Control console, you may have to remotely detonate the cyborg.
-				<h3>WARNING:</h3> Do not detonate a borg without an explicit reason for doing so. Cyborgs are expensive pieces of NanoTrasen equipment, and you may be punished for detonating them without reason.
+				<h3>WARNING:</h3> Do not detonate a borg without an explicit reason for doing so. Cyborgs are expensive pieces of company equipment, and you may be punished for detonating them without reason.
 
 				</body>
 			</html>
@@ -744,9 +705,9 @@
 
 /obj/item/weapon/book/manual/security_space_law
 	name = "Corporate Regulations"
-	desc = "A set of NanoTrasen guidelines for keeping law and order on their space stations."
+	desc = "A set of corporate guidelines for keeping law and order on privately-owned space stations."
 	icon_state = "bookSpaceLaw"
-	author = "NanoTrasen"
+	author = "The Company"
 	title = "Corporate Regulations"
 
 /obj/item/weapon/book/manual/security_space_law/New()
@@ -767,11 +728,11 @@
 
 
 /obj/item/weapon/book/manual/medical_diagnostics_manual
-	name = "NT Medical Diagnostics Manual"
+	name = "Medical Diagnostics Manual"
 	desc = "First, do no harm. A detailed medical practitioner's guide."
 	icon_state = "bookMedical"
-	author = "NanoTrasen Medicine Department"
-	title = "NT Medical Diagnostics Manual"
+	author = "Medical Department"
+	title = "Medical Diagnostics Manual"
 
 /obj/item/weapon/book/manual/medical_diagnostics_manual/New()
 	..()
@@ -790,7 +751,7 @@
 				<br>
 				<h1>The Oath</h1>
 
-				<i>The Medical Oath sworn by recognised medical practitioners in the employ of NanoTrasen</i><br>
+				<i>The Medical Oath sworn by recognised medical practitioners in the employ of [company_name]</i><br>
 
 				<ol>
 					<li>Now, as a new doctor, I solemnly promise that I will, to the best of my ability, serve humanity-caring for the sick, promoting good health, and alleviating pain and suffering.</li>
@@ -952,7 +913,7 @@
 /obj/item/weapon/book/manual/detective
 	name = "The Film Noir: Proper Procedures for Investigations"
 	icon_state ="bookDetective"
-	author = "NanoTrasen"
+	author = "The Company"
 	title = "The Film Noir: Proper Procedures for Investigations"
 
 	dat = {"<html>
@@ -1011,7 +972,7 @@
 				</head>
 				<body>
 				<h1>Nuclear Explosives 101</h1>
-				Hello and thank you for choosing the Syndicate for your nuclear information needs. Today's crash course will deal with the operation of a Fusion Class NanoTrasen made Nuclear Device.<br><br>
+				Hello and thank you for choosing the Syndicate for your nuclear information needs. Today's crash course will deal with the operation of a Nuclear Fission Device.<br><br>
 
 				First and foremost, DO NOT TOUCH ANYTHING UNTIL THE BOMB IS IN PLACE. Pressing any button on the compacted bomb will cause it to extend and bolt itself into place. If this is done, to unbolt it, one must completely log in, which at this time may not be possible.<br>
 
@@ -1036,7 +997,7 @@
 
 				Remember the order:<br>
 				<b>Disk, Code, Safety, Timer, Disk, RUN!</b><br><br>
-				Intelligence Analysts believe that normal NanoTrasen procedure is for the Captain to secure the nuclear authentication disk.<br><br>
+				Intelligence Analysts believe that normal corporate procedure is for the Captain to secure the nuclear authentication disk.<br><br>
 
 				Good luck!
 				</body>
@@ -1210,7 +1171,7 @@
 				and then is screwed in for one and a quarter full rotations clockwise, leaving the faceplate directly in front of you. There is a small button on the right side of the helmet that activates the helmet light.
 				The tanks that fasten onto the side slot are emergency tanks, as well as full-sized oxygen tanks, leaving your back free for a backpack or satchel.<BR><BR>
 
-				These suits generally only fit one species. Nanotrasen's are usually human-fitting by default, but there's equipment that can make modifications to the hardsuits to fit them to other species.<BR><BR>
+				These suits generally only fit one species. NanoTrasen's are usually human-fitting by default, but there's equipment that can make modifications to the hardsuits to fit them to other species.<BR><BR>
 
 				<h2><a name="Equipment">Modification Equipment</a></h2>
 				<I>How to actually make hardsuits fit you.</I><BR>

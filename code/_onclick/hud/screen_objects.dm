@@ -12,8 +12,10 @@
 	layer = 20.0
 	unacidable = 1
 	var/obj/master = null	//A reference to the object in the slot. Grabs or items, generally.
-	var/gun_click_time = -100 //I'm lazy.
 
+/obj/screen/Destroy()
+	master = null
+	return ..()
 
 /obj/screen/text
 	icon = null
@@ -42,12 +44,15 @@
 /obj/screen/item_action
 	var/obj/item/owner
 
+/obj/screen/item_action/Destroy()
+	..()
+	owner = null
+
 /obj/screen/item_action/Click()
 	if(!usr || !owner)
 		return 1
-	if(usr.next_move >= world.time)
+	if(!usr.canClick())
 		return
-	usr.next_move = world.time + 6
 
 	if(usr.stat || usr.restrained() || usr.stunned || usr.lying)
 		return 1
@@ -57,11 +62,6 @@
 
 	owner.ui_action_click()
 	return 1
-
-//This is the proc used to update all the action buttons. It just returns for all mob types except humans.
-/mob/proc/update_action_buttons()
-	return
-
 
 /obj/screen/grab
 	name = "grab"
@@ -82,7 +82,7 @@
 	name = "storage"
 
 /obj/screen/storage/Click()
-	if(world.time <= usr.next_move)
+	if(!usr.canClick())
 		return 1
 	if(usr.stat || usr.paralysis || usr.stunned || usr.weakened)
 		return 1
@@ -92,35 +92,7 @@
 		var/obj/item/I = usr.get_active_hand()
 		if(I)
 			usr.ClickOn(master)
-			usr.next_move = world.time+2
 	return 1
-
-/obj/screen/gun
-	name = "gun"
-	icon = 'icons/mob/screen1.dmi'
-	master = null
-	dir = 2
-
-	move
-		name = "Allow Walking"
-		icon_state = "no_walk0"
-		screen_loc = ui_gun2
-
-	run
-		name = "Allow Running"
-		icon_state = "no_run0"
-		screen_loc = ui_gun3
-
-	item
-		name = "Allow Item Use"
-		icon_state = "no_item0"
-		screen_loc = ui_gun1
-
-	mode
-		name = "Toggle Gun Mode"
-		icon_state = "gun0"
-		screen_loc = ui_gun_select
-		//dir = 1
 
 /obj/screen/zone_sel
 	name = "damage zone"
@@ -196,7 +168,6 @@
 
 /obj/screen/Click(location, control, params)
 	if(!usr)	return 1
-
 	switch(name)
 		if("toggle")
 			if(usr.hud_used.inventory_shown)
@@ -269,9 +240,9 @@
 					else
 
 						var/no_mask
-						if(!(C.wear_mask && C.wear_mask.flags & AIRTIGHT))
+						if(!(C.wear_mask && C.wear_mask.item_flags & AIRTIGHT))
 							var/mob/living/carbon/human/H = C
-							if(!(H.head && H.head.flags & AIRTIGHT))
+							if(!(H.head && H.head.item_flags & AIRTIGHT))
 								no_mask = 1
 
 						if(no_mask)
@@ -360,17 +331,17 @@
 								C << "<span class='notice'>You don't have a[breathes=="oxygen" ? "n oxygen" : addtext(" ",breathes)] tank.</span>"
 		if("act_intent")
 			usr.a_intent_change("right")
-		if("help")
-			usr.a_intent = "help"
+		if(I_HELP)
+			usr.a_intent = I_HELP
 			usr.hud_used.action_intent.icon_state = "intent_help"
-		if("harm")
-			usr.a_intent = "hurt"
-			usr.hud_used.action_intent.icon_state = "intent_hurt"
-		if("grab")
-			usr.a_intent = "grab"
+		if(I_HURT)
+			usr.a_intent = I_HURT
+			usr.hud_used.action_intent.icon_state = "intent_harm"
+		if(I_GRAB)
+			usr.a_intent = I_GRAB
 			usr.hud_used.action_intent.icon_state = "intent_grab"
-		if("disarm")
-			usr.a_intent = "disarm"
+		if(I_DISARM)
+			usr.a_intent = I_DISARM
 			usr.hud_used.action_intent.icon_state = "intent_disarm"
 
 		if("pull")
@@ -379,7 +350,8 @@
 			if(!usr.stat && isturf(usr.loc) && !usr.restrained())
 				usr:toggle_throw_mode()
 		if("drop")
-			usr.drop_item_v()
+			if(usr.client)
+				usr.client.drop_item()
 
 		if("module")
 			if(isrobot(usr))
@@ -425,65 +397,6 @@
 		if("module3")
 			if(istype(usr, /mob/living/silicon/robot))
 				usr:toggle_module(3)
-
-		if("Allow Walking")
-			if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-				return
-			if(!istype(usr.equipped(),/obj/item/weapon/gun))
-				usr << "You need your gun in your active hand to do that!"
-				return
-			usr.client.AllowTargetMove()
-			gun_click_time = world.time
-
-		if("Disallow Walking")
-			if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-				return
-			if(!istype(usr.equipped(),/obj/item/weapon/gun))
-				usr << "You need your gun in your active hand to do that!"
-				return
-			usr.client.AllowTargetMove()
-			gun_click_time = world.time
-
-		if("Allow Running")
-			if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-				return
-			if(!istype(usr.equipped(),/obj/item/weapon/gun))
-				usr << "You need your gun in your active hand to do that!"
-				return
-			usr.client.AllowTargetRun()
-			gun_click_time = world.time
-
-		if("Disallow Running")
-			if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-				return
-			if(!istype(usr.equipped(),/obj/item/weapon/gun))
-				usr << "You need your gun in your active hand to do that!"
-				return
-			usr.client.AllowTargetRun()
-			gun_click_time = world.time
-
-		if("Allow Item Use")
-			if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-				return
-			if(!istype(usr.equipped(),/obj/item/weapon/gun))
-				usr << "You need your gun in your active hand to do that!"
-				return
-			usr.client.AllowTargetClick()
-			gun_click_time = world.time
-
-
-		if("Disallow Item Use")
-			if(gun_click_time > world.time - 30)	//give them 3 seconds between mode changes.
-				return
-			if(!istype(usr.equipped(),/obj/item/weapon/gun))
-				usr << "You need your gun in your active hand to do that!"
-				return
-			usr.client.AllowTargetClick()
-			gun_click_time = world.time
-
-		if("Toggle Gun Mode")
-			usr.client.ToggleGunMode()
-
 		else
 			return 0
 	return 1
@@ -491,7 +404,7 @@
 /obj/screen/inventory/Click()
 	// At this point in client Click() code we have passed the 1/10 sec check and little else
 	// We don't even know if it's a middle click
-	if(world.time <= usr.next_move)
+	if(!usr.canClick())
 		return 1
 	if(usr.stat || usr.paralysis || usr.stunned || usr.weakened)
 		return 1
@@ -502,12 +415,10 @@
 			if(iscarbon(usr))
 				var/mob/living/carbon/C = usr
 				C.activate_hand("r")
-				usr.next_move = world.time+2
 		if("l_hand")
 			if(iscarbon(usr))
 				var/mob/living/carbon/C = usr
 				C.activate_hand("l")
-				usr.next_move = world.time+2
 		if("swap")
 			usr:swap_hand()
 		if("hand")
@@ -516,5 +427,4 @@
 			if(usr.attack_ui(slot_id))
 				usr.update_inv_l_hand(0)
 				usr.update_inv_r_hand(0)
-				usr.next_move = world.time+6
 	return 1

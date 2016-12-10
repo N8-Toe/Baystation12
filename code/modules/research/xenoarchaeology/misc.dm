@@ -73,7 +73,7 @@
 		..()
 		sleep(2)
 		new /obj/item/clothing/under/rank/scientist(src)
-		new /obj/item/clothing/suit/storage/labcoat(src)
+		new /obj/item/clothing/suit/storage/toggle/labcoat(src)
 		new /obj/item/clothing/shoes/white(src)
 		new /obj/item/clothing/glasses/science(src)
 		new /obj/item/device/radio/headset/headset_sci(src)
@@ -105,6 +105,7 @@
 		new /obj/item/weapon/pickaxe/hand(src)
 		new /obj/item/weapon/storage/bag/fossils(src)
 		new /obj/item/weapon/hand_labeler(src)
+		new /obj/item/taperoll/research(src)
 		return
 
 //---- Isolation room air alarms

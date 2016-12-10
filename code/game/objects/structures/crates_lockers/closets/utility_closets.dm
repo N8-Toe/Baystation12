@@ -22,17 +22,21 @@
 /obj/structure/closet/emcloset/New()
 	..()
 
-	switch (pickweight(list("small" = 55, "aid" = 25, "tank" = 10, "both" = 10, "nothing" = 0, "delete" = 0)))
+	switch (pickweight(list("small" = 55, "aid" = 25, "tank" = 10, "both" = 10)))
 		if ("small")
 			new /obj/item/weapon/tank/emergency_oxygen(src)
 			new /obj/item/weapon/tank/emergency_oxygen(src)
 			new /obj/item/clothing/mask/breath(src)
 			new /obj/item/clothing/mask/breath(src)
+			new /obj/item/clothing/suit/space/emergency(src)
+			new /obj/item/clothing/head/helmet/space/emergency(src)
 		if ("aid")
 			new /obj/item/weapon/tank/emergency_oxygen(src)
 			new /obj/item/weapon/storage/toolbox/emergency(src)
 			new /obj/item/clothing/mask/breath(src)
 			new /obj/item/weapon/storage/firstaid/o2(src)
+			new /obj/item/clothing/suit/space/emergency(src)
+			new /obj/item/clothing/head/helmet/space/emergency(src)
 		if ("tank")
 			new /obj/item/weapon/tank/emergency_oxygen/engi(src)
 			new /obj/item/clothing/mask/breath(src)
@@ -43,17 +47,10 @@
 			new /obj/item/weapon/tank/emergency_oxygen/engi(src)
 			new /obj/item/clothing/mask/breath(src)
 			new /obj/item/weapon/storage/firstaid/o2(src)
-		if ("nothing")
-			// doot
-
-		// teehee - Ah, tg coders...
-		if ("delete")
-			del(src)
-
-		//If you want to re-add fire, just add "fire" = 15 to the pick list.
-		/*if ("fire")
-			new /obj/structure/closet/firecloset(src.loc)
-			del(src)*/
+			new /obj/item/clothing/suit/space/emergency(src)
+			new /obj/item/clothing/suit/space/emergency(src)
+			new /obj/item/clothing/head/helmet/space/emergency(src)
+			new /obj/item/clothing/head/helmet/space/emergency(src)
 
 /obj/structure/closet/emcloset/legacy/New()
 	..()

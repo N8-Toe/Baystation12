@@ -1,7 +1,7 @@
 /obj/item/mecha_parts/mecha_equipment/weapon
 	name = "mecha weapon"
 	range = RANGED
-	origin_tech = "materials=3;combat=3"
+	origin_tech = list(TECH_MATERIAL = 3, TECH_COMBAT = 3)
 	var/projectile //Type of projectile fired.
 	var/projectiles = 1 //Amount of projectiles loaded.
 	var/projectiles_per_shot = 1 //Amount of projectiles fired per single shot.
@@ -37,7 +37,7 @@
 		playsound(chassis, fire_sound, fire_volume, 1)
 		projectiles--
 		var/P = new projectile(curloc)
-		Fire(P, target, aimloc)
+		Fire(P, target)
 		if(fire_cooldown)
 			sleep(fire_cooldown)
 	if(auto_rearm)
@@ -46,16 +46,13 @@
 	do_after_cooldown()
 	return
 
-/obj/item/mecha_parts/mecha_equipment/weapon/proc/Fire(atom/A, atom/target, turf/aimloc)
+/obj/item/mecha_parts/mecha_equipment/weapon/proc/Fire(atom/A, atom/target)
 	var/obj/item/projectile/P = A
-	P.shot_from = src
-	P.original = target
-	P.starting = P.loc
-	P.current = P.loc
-	P.firer = chassis.occupant
-	P.yo = aimloc.y - P.loc.y
-	P.xo = aimloc.x - P.loc.x
-	P.process()
+	var/def_zone
+	if(chassis && istype(chassis.occupant,/mob/living/carbon/human))
+		var/mob/living/carbon/human/H = chassis.occupant
+		def_zone = H.zone_sel.selecting
+	P.launch(target, def_zone)
 
 /obj/item/mecha_parts/mecha_equipment/weapon/energy
 	name = "general energy weapon"
@@ -100,7 +97,7 @@
 	name = "eZ-13 mk2 heavy pulse rifle"
 	icon_state = "mecha_pulse"
 	energy_drain = 120
-	origin_tech = "materials=3;combat=6;powerstorage=4"
+	origin_tech = list(TECH_MATERIAL = 3, TECH_COMBAT = 6, TECH_POWER = 4)
 	projectile = /obj/item/projectile/beam/pulse/heavy
 	fire_sound = 'sound/weapons/marauder.ogg'
 
@@ -113,7 +110,7 @@
 		A.bullet_act(src, def_zone)
 		src.life -= 10
 		if(life <= 0)
-			del(src)
+			qdel(src)
 		return
 
 /obj/item/mecha_parts/mecha_equipment/weapon/energy/taser
@@ -199,7 +196,7 @@
 	name = "\improper LBX AC 10 \"Scattershot\""
 	icon_state = "mecha_scatter"
 	equip_cooldown = 20
-	projectile = /obj/item/projectile/bullet/midbullet
+	projectile = /obj/item/projectile/bullet/pistol/medium
 	fire_sound = 'sound/weapons/Gunshot.ogg'
 	fire_volume = 80
 	projectiles = 40
@@ -211,7 +208,7 @@
 	name = "\improper Ultra AC 2"
 	icon_state = "mecha_uac2"
 	equip_cooldown = 10
-	projectile = /obj/item/projectile/bullet/weakbullet
+	projectile = /obj/item/projectile/bullet/pistol/medium
 	fire_sound = 'sound/weapons/Gunshot.ogg'
 	projectiles = 300
 	projectiles_per_shot = 3
@@ -223,7 +220,7 @@
 	var/missile_speed = 2
 	var/missile_range = 30
 
-/obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/Fire(atom/movable/AM, atom/target, turf/aimloc)
+/obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/Fire(atom/movable/AM, atom/target)
 	AM.throw_at(target,missile_range, missile_speed, chassis)
 
 /obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/explosive
@@ -235,7 +232,7 @@
 	projectile_energy_cost = 1000
 	equip_cooldown = 60
 
-/obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/explosive/Fire(atom/movable/AM, atom/target, turf/aimloc)
+/obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/explosive/Fire(atom/movable/AM, atom/target)
 	var/obj/item/missile/M = AM
 	M.primed = 1
 	..()
@@ -248,8 +245,8 @@
 
 	throw_impact(atom/hit_atom)
 		if(primed)
-			explosion(hit_atom, 0, 0, 2, 4)
-			del(src)
+			explosion(hit_atom, 0, 1, 2, 4)
+			qdel(src)
 		else
 			..()
 		return
@@ -265,7 +262,7 @@
 	equip_cooldown = 60
 	var/det_time = 20
 
-/obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/flashbang/Fire(atom/movable/AM, atom/target, turf/aimloc)
+/obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/flashbang/Fire(atom/movable/AM, atom/target)
 	..()
 	var/obj/item/weapon/grenade/flashbang/F = AM
 	spawn(det_time)
@@ -274,7 +271,6 @@
 /obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/flashbang/clusterbang//Because I am a heartless bastard -Sieve
 	name = "\improper SOP-6 grenade launcher"
 	projectile = /obj/item/weapon/grenade/flashbang/clusterbang
-	construction_cost = list("metal"=20000,"gold"=6000,"uranium"=6000)
 
 /obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/flashbang/clusterbang/limited/get_equip_info()//Limited version of the clusterbang launcher that can't reload
 	return "<span style=\"color:[equip_ready?"#0f0":"#f00"];\">*</span>&nbsp;[chassis.selected==src?"<b>":"<a href='?src=\ref[chassis];select_equip=\ref[src]'>"][src.name][chassis.selected==src?"</b>":"</a>"]\[[src.projectiles]\]"

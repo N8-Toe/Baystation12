@@ -10,8 +10,8 @@
 	item_state = "apron"
 	blood_overlay_type = "armor"
 	body_parts_covered = 0
-	allowed = list (/obj/item/weapon/reagent_containers/spray/plantbgone,/obj/item/device/analyzer/plant_analyzer,/obj/item/seeds,/obj/item/weapon/reagent_containers/glass/fertilizer,/obj/item/weapon/minihoe)
-	sprite_sheets = list("Vox" = 'icons/mob/species/vox/suit.dmi')
+	allowed = list (/obj/item/weapon/reagent_containers/spray/plantbgone,/obj/item/device/analyzer/plant_analyzer,/obj/item/seeds,/obj/item/weapon/reagent_containers/glass/fertilizer,/obj/item/weapon/material/minihoe)
+
 //Captain
 /obj/item/clothing/suit/captunic
 	name = "captain's parade tunic"
@@ -20,7 +20,6 @@
 	item_state = "captunic"
 	body_parts_covered = UPPER_TORSO|ARMS
 	flags_inv = HIDEJUMPSUIT
-	sprite_sheets = list("Vox" = 'icons/mob/species/vox/suit.dmi')
 
 /obj/item/clothing/suit/captunic/capjacket
 	name = "captain's uniform jacket"
@@ -37,7 +36,6 @@
 	icon_state = "chaplain_hoodie"
 	item_state = "chaplain_hoodie"
 	body_parts_covered = UPPER_TORSO|ARMS
-	sprite_sheets = list("Vox" = 'icons/mob/species/vox/suit.dmi')
 
 //Chaplain
 /obj/item/clothing/suit/nun
@@ -47,19 +45,17 @@
 	item_state = "nun"
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
 	flags_inv = HIDESHOES|HIDEJUMPSUIT
-	sprite_sheets = list("Vox" = 'icons/mob/species/vox/suit.dmi')
 
 //Chef
 /obj/item/clothing/suit/chef
-	name = "Chef's apron"
+	name = "chef's apron"
 	desc = "An apron used by a high class chef."
 	icon_state = "chef"
 	item_state = "chef"
 	gas_transfer_coefficient = 0.90
 	permeability_coefficient = 0.50
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS
-	allowed = list (/obj/item/weapon/kitchenknife,/obj/item/weapon/butch)
-	sprite_sheets = list("Vox" = 'icons/mob/species/vox/suit.dmi')
+	allowed = list (/obj/item/weapon/material/knife)
 
 //Chef
 /obj/item/clothing/suit/chef/classic
@@ -93,18 +89,18 @@
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS
 
 //Detective
-/obj/item/clothing/suit/storage/det_suit
-	name = "coat"
-	desc = "An 18th-century multi-purpose trenchcoat. Someone who wears this means serious business."
+/obj/item/clothing/suit/storage/det_trench
+	name = "brown trenchcoat"
+	desc = "A rugged canvas trenchcoat, designed and created by TX Fabrication Corp. The coat is externally impact resistant - perfect for your next act of autodefenestration!"
 	icon_state = "detective"
 	item_state = "det_suit"
 	blood_overlay_type = "coat"
 	body_parts_covered = UPPER_TORSO|ARMS
-	allowed = list(/obj/item/weapon/tank/emergency_oxygen, /obj/item/device/flashlight,/obj/item/weapon/gun/energy,/obj/item/weapon/gun/projectile,/obj/item/ammo_magazine,/obj/item/ammo_casing,/obj/item/weapon/melee/baton,/obj/item/weapon/handcuffs,/obj/item/weapon/storage/fancy/cigarettes,/obj/item/weapon/flame/lighter,/obj/item/device/detective_scanner,/obj/item/device/taperecorder)
+	allowed = list(/obj/item/weapon/tank/emergency_oxygen, /obj/item/device/flashlight,/obj/item/weapon/gun/energy,/obj/item/weapon/gun/projectile,/obj/item/ammo_magazine,/obj/item/ammo_casing,/obj/item/weapon/melee/baton,/obj/item/weapon/handcuffs,/obj/item/weapon/storage/fancy/cigarettes,/obj/item/weapon/flame/lighter,/obj/item/device/taperecorder)
 	armor = list(melee = 50, bullet = 10, laser = 25, energy = 10, bomb = 0, bio = 0, rad = 0)
-	sprite_sheets = list("Vox" = 'icons/mob/species/vox/suit.dmi')
 
-/obj/item/clothing/suit/storage/det_suit/black
+/obj/item/clothing/suit/storage/det_trench/grey
+	name = "grey trenchcoat"
 	icon_state = "detective2"
 
 //Forensics
@@ -113,7 +109,7 @@
 	desc = "A forensics technician jacket."
 	item_state = "det_suit"
 	body_parts_covered = UPPER_TORSO|ARMS
-	allowed = list(/obj/item/weapon/tank/emergency_oxygen, /obj/item/device/flashlight,/obj/item/weapon/gun/energy,/obj/item/weapon/gun/projectile,/obj/item/ammo_magazine,/obj/item/ammo_casing,/obj/item/weapon/melee/baton,/obj/item/weapon/handcuffs,/obj/item/device/detective_scanner,/obj/item/device/taperecorder)
+	allowed = list(/obj/item/weapon/tank/emergency_oxygen, /obj/item/device/flashlight,/obj/item/weapon/gun/energy,/obj/item/weapon/gun/projectile,/obj/item/ammo_magazine,/obj/item/ammo_casing,/obj/item/weapon/melee/baton,/obj/item/weapon/handcuffs,/obj/item/device/taperecorder)
 	armor = list(melee = 10, bullet = 10, laser = 15, energy = 10, bomb = 0, bio = 0, rad = 0)
 
 /obj/item/clothing/suit/storage/forensics/red
@@ -137,8 +133,6 @@
 	/obj/item/weapon/crowbar, /obj/item/weapon/screwdriver, /obj/item/weapon/weldingtool, /obj/item/weapon/wirecutters, /obj/item/weapon/wrench, /obj/item/weapon/tank/emergency_oxygen, \
 	/obj/item/clothing/mask/gas, /obj/item/taperoll/engineering)
 	body_parts_covered = UPPER_TORSO
-
-	sprite_sheets = list("Vox" = 'icons/mob/species/vox/suit.dmi')
 
 //Lawyer
 /obj/item/clothing/suit/storage/toggle/lawyer/bluejacket
@@ -184,6 +178,14 @@
 	allowed = list(/obj/item/stack/medical, /obj/item/weapon/reagent_containers/dropper, /obj/item/weapon/reagent_containers/hypospray, /obj/item/weapon/reagent_containers/syringe, \
 	/obj/item/device/healthanalyzer, /obj/item/device/flashlight, /obj/item/device/radio, /obj/item/weapon/tank/emergency_oxygen)
 	body_parts_covered = UPPER_TORSO|ARMS
+
+/obj/item/clothing/suit/storage/toggle/fr_jacket/ems
+	name = "\improper EMS jacket"
+	desc = "A dark blue, martian-pattern, EMS jacket. It sports high-visibility reflective stripes and a star of life on the back."
+	icon_state = "ems_jacket_closed"
+	item_state = "ems_jacket_closed"
+	icon_open = "ems_jacket_open"
+	icon_closed = "ems_jacket_closed"
 
 //Mime
 /obj/item/clothing/suit/suspenders

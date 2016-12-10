@@ -20,6 +20,7 @@
 <A href='?src=\ref[src];make=20;dir=1'>Pipe Cap</A><BR>
 <A href='?src=\ref[src];make=19;dir=1'>4-Way Manifold</A><BR>
 <A href='?src=\ref[src];make=18;dir=1'>Manual T-Valve</A><BR>
+<A href='?src=\ref[src];make=43;dir=1'>Manual T-Valve - Mirrored</A><BR>
 <A href='?src=\ref[src];make=21;dir=1'>Upward Pipe</A><BR>
 <A href='?src=\ref[src];make=22;dir=1'>Downward Pipe</A><BR>
 <b>Supply pipes:</b><BR>
@@ -48,10 +49,10 @@
 <A href='?src=\ref[src];make=10;dir=1'>Scrubber</A><BR>
 <A href='?src=\ref[src];makemeter=1'>Meter</A><BR>
 <A href='?src=\ref[src];make=13;dir=1'>Gas Filter</A><BR>
-<A href='?src=\ref[src];make=23;dir=1'>Gas Filter-Mirrored</A><BR>
+<A href='?src=\ref[src];make=23;dir=1'>Gas Filter - Mirrored</A><BR>
 <A href='?src=\ref[src];make=14;dir=1'>Gas Mixer</A><BR>
-<A href='?src=\ref[src];make=25;dir=1'>Gas Mixer-Mirrored</A><BR>
-<A href='?src=\ref[src];make=24;dir=1'>Gas Mixer-T</A><BR>
+<A href='?src=\ref[src];make=25;dir=1'>Gas Mixer - Mirrored</A><BR>
+<A href='?src=\ref[src];make=24;dir=1'>Gas Mixer - T</A><BR>
 <A href='?src=\ref[src];make=26;dir=1'>Omni Gas Mixer</A><BR>
 <A href='?src=\ref[src];make=27;dir=1'>Omni Gas Filter</A><BR>
 <b>Heat exchange:</b><BR>
@@ -100,18 +101,18 @@
 /obj/machinery/pipedispenser/attackby(var/obj/item/W as obj, var/mob/user as mob)
 	src.add_fingerprint(usr)
 	if (istype(W, /obj/item/pipe) || istype(W, /obj/item/pipe_meter))
-		usr << "\blue You put [W] back to [src]."
+		usr << "<span class='notice'>You put [W] back to [src].</span>"
 		user.drop_item()
-		del(W)
+		qdel(W)
 		return
 	else if (istype(W, /obj/item/weapon/wrench))
 		if (unwrenched==0)
 			playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-			user << "\blue You begin to unfasten \the [src] from the floor..."
+			user << "<span class='notice'>You begin to unfasten \the [src] from the floor...</span>"
 			if (do_after(user, 40))
 				user.visible_message( \
-					"[user] unfastens \the [src].", \
-					"\blue You have unfastened \the [src]. Now it can be pulled somewhere else.", \
+					"<span class='notice'>[user] unfastens \the [src].</span>", \
+					"<span class='notice'>You have unfastened \the [src]. Now it can be pulled somewhere else.</span>", \
 					"You hear ratchet.")
 				src.anchored = 0
 				src.stat |= MAINT
@@ -120,11 +121,11 @@
 					usr << browse(null, "window=pipedispenser")
 		else /*if (unwrenched==1)*/
 			playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-			user << "\blue You begin to fasten \the [src] to the floor..."
+			user << "<span class='notice'>You begin to fasten \the [src] to the floor...</span>"
 			if (do_after(user, 20))
 				user.visible_message( \
-					"[user] fastens \the [src].", \
-					"\blue You have fastened \the [src]. Now it can dispense pipes.", \
+					"<span class='notice'>[user] fastens \the [src].</span>", \
+					"<span class='notice'>You have fastened \the [src]. Now it can dispense pipes.</span>", \
 					"You hear ratchet.")
 				src.anchored = 1
 				src.stat &= ~MAINT
@@ -144,7 +145,7 @@
 //Allow you to push disposal pipes into it (for those with density 1)
 /obj/machinery/pipedispenser/disposal/Crossed(var/obj/structure/disposalconstruct/pipe as obj)
 	if(istype(pipe) && !pipe.anchored)
-		del(pipe)
+		qdel(pipe)
 
 Nah
 */
@@ -160,7 +161,7 @@ Nah
 	if (pipe.anchored)
 		return
 
-	del(pipe)
+	qdel(pipe)
 
 /obj/machinery/pipedispenser/disposal/attack_hand(user as mob)
 	if(..())
@@ -178,6 +179,11 @@ Nah
 <A href='?src=\ref[src];dmake=7'>Chute</A><BR>
 <A href='?src=\ref[src];dmake=21'>Upwards</A><BR>
 <A href='?src=\ref[src];dmake=22'>Downwards</A><BR>
+<A href='?src=\ref[src];dmake=8'>Sorting</A><BR>
+<A href='?src=\ref[src];dmake=9'>Sorting (Wildcard)</A><BR>
+<A href='?src=\ref[src];dmake=10'>Sorting (Untagged)</A><BR>
+<A href='?src=\ref[src];dmake=11'>Tagger</A><BR>
+<A href='?src=\ref[src];dmake=12'>Tagger (Partial)</A><BR>
 "}
 ///// Z-Level stuff
 
@@ -219,6 +225,19 @@ Nah
 				if(7)
 					C.ptype = 8
 					C.density = 1
+				if(8)
+					C.ptype = 9
+					C.subtype = 0
+				if(9)
+					C.ptype = 9
+					C.subtype = 1
+				if(10)
+					C.ptype = 9
+					C.subtype = 2
+				if(11)
+					C.ptype = 13
+				if(12)
+					C.ptype = 14
 ///// Z-Level stuff
 				if(21)
 					C.ptype = 11

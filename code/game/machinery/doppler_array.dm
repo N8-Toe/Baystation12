@@ -9,12 +9,9 @@ var/list/doppler_arrays = list()
 	..()
 	doppler_arrays += src
 
-/obj/machinery/doppler_array/Del()
+/obj/machinery/doppler_array/Destroy()
 	doppler_arrays -= src
 	..()
-
-/obj/machinery/doppler_array/process()
-	return PROCESS_KILL
 
 /obj/machinery/doppler_array/proc/sense_explosion(var/x0,var/y0,var/z0,var/devastation_range,var/heavy_impact_range,var/light_impact_range,var/took)
 	if(stat & NOPOWER)	return
@@ -40,7 +37,7 @@ var/list/doppler_arrays = list()
 	var/message = "Explosive disturbance detected - Epicenter at: grid ([x0],[y0]). Epicenter radius: [devastation_range]. Outer radius: [heavy_impact_range]. Shockwave radius: [light_impact_range]. Temporal displacement of tachyons: [took]seconds."
 
 	for(var/mob/O in hearers(src, null))
-		O.show_message("<span class='game say'><span class='name'>[src]</span> states coldly, \"[message]\"",2)
+		O.show_message("<span class='game say'><span class='name'>[src]</span> states coldly, \"[message]\"</span>",2)
 
 
 /obj/machinery/doppler_array/power_change()

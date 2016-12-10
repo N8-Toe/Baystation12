@@ -8,13 +8,9 @@
 
 /obj/item/clothing/head/helmet/space/skrell/white
 	icon_state = "skrell_helmet_white"
-	item_state = "skrell_helmet_white"
-	item_color = "skrell_helmet_white"
 
 /obj/item/clothing/head/helmet/space/skrell/black
 	icon_state = "skrell_helmet_black"
-	item_state = "skrell_helmet_black"
-	item_color = "skrell_helmet_black"
 
 /obj/item/clothing/suit/space/skrell
 	name = "Skrellian voidsuit"
@@ -28,12 +24,10 @@
 /obj/item/clothing/suit/space/skrell/white
 	icon_state = "skrell_suit_white"
 	item_state = "skrell_suit_white"
-	item_color = "skrell_suit_white"
 
 /obj/item/clothing/suit/space/skrell/black
 	icon_state = "skrell_suit_black"
 	item_state = "skrell_suit_black"
-	item_color = "skrell_suit_black"
 
 // Vox space gear (vaccuum suit, low pressure armour)
 // Can't be equipped by any other species due to bone structure and vox cybernetics.
@@ -45,21 +39,13 @@
 	siemens_coefficient = 0.6
 	heat_protection = UPPER_TORSO|LOWER_TORSO|LEGS|FEET|ARMS|HANDS
 	max_heat_protection_temperature = SPACE_SUIT_MAX_HEAT_PROTECTION_TEMPERATURE
-	species_restricted = list("Vox", "Vox Armalis")
-	sprite_sheets = list(
-		"Vox" = 'icons/mob/species/vox/suit.dmi',
-		"Vox Armalis" = 'icons/mob/species/armalis/suit.dmi',
-		)
+	species_restricted = list("Vox")
 
 /obj/item/clothing/head/helmet/space/vox
 	armor = list(melee = 60, bullet = 50, laser = 30, energy = 15, bomb = 30, bio = 30, rad = 30)
 	siemens_coefficient = 0.6
-	flags = HEADCOVERSEYES|STOPSPRESSUREDMAGE
-	species_restricted = list("Vox","Vox Armalis")
-	sprite_sheets = list(
-		"Vox" = 'icons/mob/species/vox/head.dmi',
-		"Vox Armalis" = 'icons/mob/species/armalis/head.dmi',
-		)
+	item_flags = STOPPRESSUREDAMAGE
+	species_restricted = list("Vox")
 
 /obj/item/clothing/head/helmet/space/vox/pressure
 	name = "alien helmet"
@@ -78,7 +64,6 @@
 	icon_state = "vox-carapace"
 	item_state = "vox-carapace"
 	desc = "A glowing visor, perhaps stolen from a depressed Cylon."
-	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
 
 /obj/item/clothing/suit/space/vox/carapace
 	name = "alien carapace armour"
@@ -118,7 +103,6 @@
 	name = "alien clothing"
 	desc = "This doesn't look very comfortable."
 	icon_state = "vox-casual-1"
-	item_color = "vox-casual-1"
 	item_state = "vox-casual-1"
 	body_parts_covered = LEGS
 
@@ -126,7 +110,6 @@
 	name = "alien robes"
 	desc = "Weird and flowing!"
 	icon_state = "vox-casual-2"
-	item_color = "vox-casual-2"
 	item_state = "vox-casual-2"
 
 /obj/item/clothing/gloves/yellow/vox
@@ -136,29 +119,21 @@
 	item_state = "gloves-vox"
 	siemens_coefficient = 0
 	permeability_coefficient = 0.05
-	item_color = "gloves-vox"
-	species_restricted = list("Vox","Vox Armalis")
-	sprite_sheets = list(
-		"Vox" = 'icons/mob/species/vox/gloves.dmi',
-		"Vox Armalis" = 'icons/mob/species/armalis/gloves.dmi',
-		)
+	species_restricted = list("Vox")
+
 /obj/item/clothing/shoes/magboots/vox
 
 	desc = "A pair of heavy, jagged armoured foot pieces, seemingly suitable for a velociraptor."
 	name = "vox magclaws"
 	item_state = "boots-vox"
 	icon_state = "boots-vox"
-
-	species_restricted = list("Vox","Vox Armalis")
-	sprite_sheets = list(
-		"Vox Armalis" = 'icons/mob/species/armalis/feet.dmi'
-		)
+	species_restricted = list("Vox")
 
 	action_button_name = "Toggle the magclaws"
 
 /obj/item/clothing/shoes/magboots/vox/attack_self(mob/user)
 	if(src.magpulse)
-		flags &= ~NOSLIP
+		item_flags &= ~NOSLIP
 		magpulse = 0
 		canremove = 1
 		user << "You relax your deathgrip on the flooring."
@@ -171,19 +146,19 @@
 			user << "You will have to put on the [src] before you can do that."
 			return
 
-
-		flags |= NOSLIP
+		item_flags |= NOSLIP
 		magpulse = 1
 		canremove = 0	//kinda hard to take off magclaws when you are gripping them tightly.
 		user << "You dig your claws deeply into the flooring, bracing yourself."
 		user << "It would be hard to take off the [src] without relaxing your grip first."
+	user.update_action_buttons()
 
 //In case they somehow come off while enabled.
 /obj/item/clothing/shoes/magboots/vox/dropped(mob/user as mob)
 	..()
 	if(src.magpulse)
 		user.visible_message("The [src] go limp as they are removed from [usr]'s feet.", "The [src] go limp as they are removed from your feet.")
-		flags &= ~NOSLIP
+		item_flags &= ~NOSLIP
 		magpulse = 0
 		canremove = 1
 

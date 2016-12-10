@@ -48,6 +48,8 @@ Buildable meters
 #define PIPE_SCRUBBERS_DOWN			40
 #define PIPE_SUPPLY_CAP				41
 #define PIPE_SCRUBBERS_CAP			42
+///// Mirrored T-valve ~ because I couldn't be bothered re-sorting all of the defines
+#define PIPE_MTVALVEM				43
 
 /obj/item/pipe
 	name = "pipe"
@@ -76,8 +78,10 @@ Buildable meters
 			is_bent = 1
 		if     (istype(make_from, /obj/machinery/atmospherics/pipe/simple/heat_exchanging/junction))
 			src.pipe_type = PIPE_JUNCTION
+			connect_types = CONNECT_TYPE_REGULAR|CONNECT_TYPE_HE
 		else if(istype(make_from, /obj/machinery/atmospherics/pipe/simple/heat_exchanging))
 			src.pipe_type = PIPE_HE_STRAIGHT + is_bent
+			connect_types = CONNECT_TYPE_HE
 		else if(istype(make_from, /obj/machinery/atmospherics/pipe/simple/insulated))
 			src.pipe_type = PIPE_INSULATED_STRAIGHT + is_bent
 		else if(istype(make_from, /obj/machinery/atmospherics/pipe/simple/visible/supply) || istype(make_from, /obj/machinery/atmospherics/pipe/simple/hidden/supply))
@@ -129,6 +133,8 @@ Buildable meters
 			src.pipe_type = PIPE_PASSIVE_GATE
 		else if(istype(make_from, /obj/machinery/atmospherics/unary/heat_exchanger))
 			src.pipe_type = PIPE_HEAT_EXCHANGE
+		else if(istype(make_from, /obj/machinery/atmospherics/tvalve/mirrored))
+			src.pipe_type = PIPE_MTVALVEM
 		else if(istype(make_from, /obj/machinery/atmospherics/tvalve))
 			src.pipe_type = PIPE_MTVALVE
 		else if(istype(make_from, /obj/machinery/atmospherics/pipe/manifold4w/visible/supply) || istype(make_from, /obj/machinery/atmospherics/pipe/manifold4w/hidden/supply))
@@ -186,6 +192,10 @@ Buildable meters
 		else if (pipe_type == 31 || pipe_type == 32 || pipe_type == 34 || pipe_type == 36 || pipe_type == 38 || pipe_type == 40 || pipe_type == 42)
 			connect_types = CONNECT_TYPE_SCRUBBER
 			src.color = PIPE_COLOR_RED
+		else if (pipe_type == 2 || pipe_type == 3)
+			connect_types = CONNECT_TYPE_HE
+		else if (pipe_type == 6)
+			connect_types = CONNECT_TYPE_REGULAR|CONNECT_TYPE_HE
 		else if (pipe_type == 28)
 			connect_types = CONNECT_TYPE_REGULAR|CONNECT_TYPE_SUPPLY|CONNECT_TYPE_SCRUBBER
 	//src.pipe_dir = get_pipe_dir()
@@ -243,6 +253,7 @@ Buildable meters
 		"scrubbers pipe down", \
 		"supply pipe cap", \
 		"scrubbers pipe cap", \
+		"t-valve m", \
 	)
 	name = nlist[pipe_type+1] + " fitting"
 	var/list/islist = list( \
@@ -292,6 +303,7 @@ Buildable meters
 		"cap", \
 		"cap", \
 		"cap", \
+		"mtvalvem", \
 	)
 	icon_state = islist[pipe_type + 1]
 
@@ -368,9 +380,9 @@ Buildable meters
 			return dir|flip|cw|acw
 		if(PIPE_MANIFOLD, PIPE_SUPPLY_MANIFOLD, PIPE_SCRUBBERS_MANIFOLD)
 			return flip|cw|acw
-		if(PIPE_GAS_FILTER, PIPE_GAS_MIXER,PIPE_MTVALVE)
+		if(PIPE_GAS_FILTER, PIPE_GAS_MIXER, PIPE_MTVALVE)
 			return dir|flip|cw
-		if(PIPE_GAS_FILTER_M, PIPE_GAS_MIXER_M)
+		if(PIPE_GAS_FILTER_M, PIPE_GAS_MIXER_M, PIPE_MTVALVEM)
 			return dir|flip|acw
 		if(PIPE_GAS_MIXER_T)
 			return dir|cw|acw
@@ -435,11 +447,11 @@ Buildable meters
 
 	for(var/obj/machinery/atmospherics/M in src.loc)
 		if((M.initialize_directions & pipe_dir) && M.check_connect_types_construction(M,src))	// matches at least one direction on either type of pipe & same connection type
-			user << "\red There is already a pipe of the same type at this location."
+			user << "<span class='warning'>There is already a pipe of the same type at this location.</span>"
 			return 1
 	// no conflicts found
 
-	var/pipefailtext = "\red There's nothing to connect this pipe section to!" //(with how the pipe code works, at least one end needs to be connected to something, otherwise the game deletes the segment)"
+	var/pipefailtext = "<span class='warning'>There's nothing to connect this pipe section to!</span>" //(with how the pipe code works, at least one end needs to be connected to something, otherwise the game deletes the segment)"
 
 	//TODO: Move all of this stuff into the various pipe constructors.
 	switch(pipe_type)
@@ -449,9 +461,9 @@ Buildable meters
 			P.set_dir(src.dir)
 			P.initialize_directions = pipe_dir
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
-			if (!P)
+			if (deleted(P))
 				usr << pipefailtext
 				return 1
 			P.build_network()
@@ -468,9 +480,9 @@ Buildable meters
 			P.set_dir(src.dir)
 			P.initialize_directions = pipe_dir
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
-			if (!P)
+			if (deleted(P))
 				usr << pipefailtext
 				return 1
 			P.build_network()
@@ -487,9 +499,9 @@ Buildable meters
 			P.set_dir(src.dir)
 			P.initialize_directions = pipe_dir
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
-			if (!P)
+			if (deleted(P))
 				usr << pipefailtext
 				return 1
 			P.build_network()
@@ -506,9 +518,9 @@ Buildable meters
 			P.set_dir(src.dir)
 			P.initialize_directions = pipe_dir
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
-			if (!P)
+			if (deleted(P))
 				usr << pipefailtext
 				return 1
 			P.build_network()
@@ -524,10 +536,8 @@ Buildable meters
 			P.set_dir(src.dir)
 			P.initialize_directions = pipe_dir //this var it's used to know if the pipe is bent or not
 			P.initialize_directions_he = pipe_dir
-			//var/turf/T = P.loc
-			//P.level = T.intact ? 2 : 1
 			P.initialize()
-			if (!P)
+			if (deleted(P))
 				usr << pipefailtext
 				return 1
 			P.build_network()
@@ -545,7 +555,7 @@ Buildable meters
 			if (pipename)
 				C.name = pipename
 			var/turf/T = C.loc
-			C.level = T.intact ? 2 : 1
+			C.level = !T.is_plating() ? 2 : 1
 			C.initialize()
 			C.build_network()
 			if (C.node)
@@ -560,9 +570,9 @@ Buildable meters
 			M.initialize_directions = pipe_dir
 			//M.New()
 			var/turf/T = M.loc
-			M.level = T.intact ? 2 : 1
+			M.level = !T.is_plating() ? 2 : 1
 			M.initialize()
-			if (!M)
+			if (deleted(M))
 				usr << pipefailtext
 				return 1
 			M.build_network()
@@ -583,7 +593,7 @@ Buildable meters
 			M.initialize_directions = pipe_dir
 			//M.New()
 			var/turf/T = M.loc
-			M.level = T.intact ? 2 : 1
+			M.level = !T.is_plating() ? 2 : 1
 			M.initialize()
 			if (!M)
 				usr << "There's nothing to connect this manifold to! (with how the pipe code works, at least one end needs to be connected to something, otherwise the game deletes the segment)"
@@ -606,7 +616,7 @@ Buildable meters
 			M.initialize_directions = pipe_dir
 			//M.New()
 			var/turf/T = M.loc
-			M.level = T.intact ? 2 : 1
+			M.level = !T.is_plating() ? 2 : 1
 			M.initialize()
 			if (!M)
 				usr << "There's nothing to connect this manifold to! (with how the pipe code works, at least one end needs to be connected to something, otherwise the game deletes the segment)"
@@ -629,9 +639,9 @@ Buildable meters
 			M.initialize_directions = pipe_dir
 			//M.New()
 			var/turf/T = M.loc
-			M.level = T.intact ? 2 : 1
+			M.level = !T.is_plating() ? 2 : 1
 			M.initialize()
-			if (!M)
+			if (deleted(M))
 				usr << pipefailtext
 				return 1
 			M.build_network()
@@ -656,7 +666,7 @@ Buildable meters
 			M.connect_types = src.connect_types
 			//M.New()
 			var/turf/T = M.loc
-			M.level = T.intact ? 2 : 1
+			M.level = !T.is_plating() ? 2 : 1
 			M.initialize()
 			if (!M)
 				usr << "There's nothing to connect this manifold to! (with how the pipe code works, at least one end needs to be connected to something, otherwise the game deletes the segment)"
@@ -683,7 +693,7 @@ Buildable meters
 			M.connect_types = src.connect_types
 			//M.New()
 			var/turf/T = M.loc
-			M.level = T.intact ? 2 : 1
+			M.level = !T.is_plating() ? 2 : 1
 			M.initialize()
 			if (!M)
 				usr << "There's nothing to connect this manifold to! (with how the pipe code works, at least one end needs to be connected to something, otherwise the game deletes the segment)"
@@ -707,10 +717,8 @@ Buildable meters
 			P.set_dir(src.dir)
 			P.initialize_directions = src.get_pdir()
 			P.initialize_directions_he = src.get_hdir()
-			//var/turf/T = P.loc
-			//P.level = T.intact ? 2 : 1
 			P.initialize()
-			if (!P)
+			if (deleted(P))
 				usr << pipefailtext //"There's nothing to connect this pipe to! (with how the pipe code works, at least one end needs to be connected to something, otherwise the game deletes the segment)"
 				return 1
 			P.build_network()
@@ -728,7 +736,7 @@ Buildable meters
 			if (pipename)
 				V.name = pipename
 			var/turf/T = V.loc
-			V.level = T.intact ? 2 : 1
+			V.level = !T.is_plating() ? 2 : 1
 			V.initialize()
 			V.build_network()
 			if (V.node)
@@ -743,7 +751,7 @@ Buildable meters
 			if (pipename)
 				V.name = pipename
 			var/turf/T = V.loc
-			V.level = T.intact ? 2 : 1
+			V.level = !T.is_plating() ? 2 : 1
 			V.initialize()
 			V.build_network()
 			if (V.node1)
@@ -762,7 +770,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -779,7 +787,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -799,7 +807,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -819,7 +827,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -839,7 +847,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -859,7 +867,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -879,7 +887,7 @@ Buildable meters
 			if (pipename)
 				S.name = pipename
 			var/turf/T = S.loc
-			S.level = T.intact ? 2 : 1
+			S.level = !T.is_plating() ? 2 : 1
 			S.initialize()
 			S.build_network()
 			if (S.node)
@@ -891,9 +899,9 @@ Buildable meters
 			P.set_dir(src.dir)
 			P.initialize_directions = pipe_dir
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
-			if (!P)
+			if (deleted(P))
 				usr << pipefailtext
 				return 1
 			P.build_network()
@@ -911,7 +919,27 @@ Buildable meters
 			if (pipename)
 				V.name = pipename
 			var/turf/T = V.loc
-			V.level = T.intact ? 2 : 1
+			V.level = !T.is_plating() ? 2 : 1
+			V.initialize()
+			V.build_network()
+			if (V.node1)
+				V.node1.initialize()
+				V.node1.build_network()
+			if (V.node2)
+				V.node2.initialize()
+				V.node2.build_network()
+			if (V.node3)
+				V.node3.initialize()
+				V.node3.build_network()
+
+		if(PIPE_MTVALVEM)		//manual t-valve
+			var/obj/machinery/atmospherics/tvalve/mirrored/V = new(src.loc)
+			V.set_dir(dir)
+			V.initialize_directions = pipe_dir
+			if (pipename)
+				V.name = pipename
+			var/turf/T = V.loc
+			V.level = !T.is_plating() ? 2 : 1
 			V.initialize()
 			V.build_network()
 			if (V.node1)
@@ -961,7 +989,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -978,7 +1006,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -995,7 +1023,7 @@ Buildable meters
 			if (pipename)
 				C.name = pipename
 			var/turf/T = C.loc
-			C.level = T.intact ? 2 : 1
+			C.level = !T.is_plating() ? 2 : 1
 			C.initialize()
 			C.build_network()
 			if (C.node)
@@ -1009,7 +1037,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -1025,7 +1053,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -1041,7 +1069,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -1057,7 +1085,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -1073,7 +1101,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -1089,7 +1117,7 @@ Buildable meters
 			if (pipename)
 				P.name = pipename
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 			if (P.node1)
@@ -1102,22 +1130,22 @@ Buildable meters
 		if(PIPE_OMNI_MIXER)
 			var/obj/machinery/atmospherics/omni/mixer/P = new(loc)
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 		if(PIPE_OMNI_FILTER)
 			var/obj/machinery/atmospherics/omni/filter/P = new(loc)
 			var/turf/T = P.loc
-			P.level = T.intact ? 2 : 1
+			P.level = !T.is_plating() ? 2 : 1
 			P.initialize()
 			P.build_network()
 
 	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
 	user.visible_message( \
 		"[user] fastens the [src].", \
-		"\blue You have fastened the [src].", \
+		"<span class='notice'>You have fastened the [src].</span>", \
 		"You hear ratchet.")
-	del(src)	// remove the pipe item
+	qdel(src)	// remove the pipe item
 
 	return
 	 //TODO: DEFERRED
@@ -1140,12 +1168,12 @@ Buildable meters
 	if (!istype(W, /obj/item/weapon/wrench))
 		return ..()
 	if(!locate(/obj/machinery/atmospherics/pipe, src.loc))
-		user << "\red You need to fasten it to a pipe"
+		user << "<span class='warning'>You need to fasten it to a pipe</span>"
 		return 1
 	new/obj/machinery/meter( src.loc )
 	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-	user << "\blue You have fastened the meter to the pipe"
-	del(src)
+	user << "<span class='notice'>You have fastened the meter to the pipe</span>"
+	qdel(src)
 //not sure why these are necessary
 #undef PIPE_SIMPLE_STRAIGHT
 #undef PIPE_SIMPLE_BENT
@@ -1166,6 +1194,7 @@ Buildable meters
 #undef PIPE_VOLUME_PUMP
 #undef PIPE_OUTLET_INJECT
 #undef PIPE_MTVALVE
+#undef PIPE_MTVALVEM
 #undef PIPE_GAS_FILTER_M
 #undef PIPE_GAS_MIXER_T
 #undef PIPE_GAS_MIXER_M

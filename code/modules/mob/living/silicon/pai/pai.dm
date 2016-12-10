@@ -4,8 +4,8 @@
 	icon_state = "repairbot"
 
 	emote_type = 2		// pAIs emotes are heard, not seen, so they can be seen through a container (eg. person)
-	small = 1
 	pass_flags = 1
+	mob_size = MOB_SMALL
 
 	var/network = "SS13"
 	var/obj/machinery/camera/current = null
@@ -53,23 +53,25 @@
 	var/secHUD = 0			// Toggles whether the Security HUD is active or not
 	var/medHUD = 0			// Toggles whether the Medical  HUD is active or not
 
+	var/medical_cannotfind = 0
 	var/datum/data/record/medicalActive1		// Datacore record declarations for record software
 	var/datum/data/record/medicalActive2
 
+	var/security_cannotfind = 0
 	var/datum/data/record/securityActive1		// Could probably just combine all these into one
 	var/datum/data/record/securityActive2
 
 	var/obj/machinery/door/hackdoor		// The airlock being hacked
-	var/hackprogress = 0				// Possible values: 0 - 100, >= 100 means the hack is complete and will be reset upon next check
+	var/hackprogress = 0				// Possible values: 0 - 1000, >= 1000 means the hack is complete and will be reset upon next check
+	var/hack_aborted = 0
 
 	var/obj/item/radio/integrated/signal/sradio // AI's signaller
 
 	var/translator_on = 0 // keeps track of the translator module
 
+	var/current_pda_messaging = null
 
 /mob/living/silicon/pai/New(var/obj/item/device/paicard)
-
-	canmove = 0
 	src.loc = paicard
 	card = paicard
 	sradio = new(src)
@@ -97,7 +99,6 @@
 
 /mob/living/silicon/pai/Login()
 	..()
-	usr << browse_rsc('html/paigrid.png')			// Go ahead and cache the interface resources as early as possible
 
 
 // this function shows the information about being silenced as a pAI in the Status panel
@@ -113,21 +114,9 @@
 	if (src.client.statpanel == "Status")
 		show_silenced()
 
-	if (proc_holder_list.len)//Generic list for proc_holder objects.
-		for(var/obj/effect/proc_holder/P in proc_holder_list)
-			statpanel("[P.panel]","",P)
-
 /mob/living/silicon/pai/check_eye(var/mob/user as mob)
 	if (!src.current)
-		return null
-	user.reset_view(src.current)
-	return 1
-
-/mob/living/silicon/pai/blob_act()
-	if (src.stat != 2)
-		src.adjustBruteLoss(60)
-		src.updatehealth()
-		return 1
+		return -1
 	return 0
 
 /mob/living/silicon/pai/restrained()
@@ -169,21 +158,7 @@
 		if(3)
 			src << "<font color=green>You feel an electric surge run through your circuitry and become acutely aware at how lucky you are that you can still feel at all.</font>"
 
-// See software.dm for Topic()
-/mob/living/silicon/pai/meteorhit(obj/O as obj)
-	for(var/mob/M in viewers(src, null))
-		M.show_message(text("\red [] has been hit by []", src, O), 1)
-	if (src.health > 0)
-		src.adjustBruteLoss(30)
-		if ((O.icon_state == "flaming"))
-			src.adjustFireLoss(40)
-		src.updatehealth()
-	return
-
 /mob/living/silicon/pai/proc/switchCamera(var/obj/machinery/camera/C)
-	if(istype(usr, /mob/living))
-		var/mob/living/U = usr
-		U.cameraFollow = null
 	if (!C)
 		src.unset_machine()
 		src.reset_view(null)
@@ -196,6 +171,19 @@
 	src.current = C
 	src.reset_view(C)
 	return 1
+
+/mob/living/silicon/pai/verb/reset_record_view()
+	set category = "pAI Commands"
+	set name = "Reset Records Software"
+
+	securityActive1 = null
+	securityActive2 = null
+	security_cannotfind = 0
+	medicalActive1 = null
+	medicalActive2 = null
+	medical_cannotfind = 0
+	nanomanager.update_uis(src)
+	usr << "<span class='notice'>You reset your record-viewing software.</span>"
 
 /mob/living/silicon/pai/cancel_camera()
 	set category = "pAI Commands"
@@ -266,12 +254,18 @@
 		return 0
 	else if(istype(card.loc,/mob))
 		var/mob/holder = card.loc
+		if(ishuman(holder))
+			var/mob/living/carbon/human/H = holder
+			for(var/obj/item/organ/external/affecting in H.organs)
+				if(card in affecting.implants)
+					affecting.take_damage(rand(30,50))
+					affecting.implants -= card
+					H.visible_message("<span class='danger'>\The [src] explodes out of \the [H]'s [affecting.name] in shower of gore!</span>")
+					break
 		holder.drop_from_inventory(card)
 	else if(istype(card.loc,/obj/item/device/pda))
 		var/obj/item/device/pda/holder = card.loc
 		holder.pai = null
-
-	canmove = 1
 
 	src.client.perspective = EYE_PERSPECTIVE
 	src.client.eye = src
@@ -334,12 +328,16 @@
 	set name = "Rest"
 	set category = "IC"
 
+	// Pass lying down or getting up to our pet human, if we're in a rig.
 	if(istype(src.loc,/obj/item/device/paicard))
 		resting = 0
+		var/obj/item/weapon/rig/rig = src.get_rig()
+		if(istype(rig))
+			rig.force_rest(src)
 	else
 		resting = !resting
 		icon_state = resting ? "[chassis]_rest" : "[chassis]"
-		src << "\blue You are now [resting ? "resting" : "getting up"]"
+		src << "<span class='notice'>You are now [resting ? "resting" : "getting up"]</span>"
 
 	canmove = !resting
 
@@ -374,26 +372,46 @@
 	src.client.perspective = EYE_PERSPECTIVE
 	src.client.eye = card
 
-	//This seems redundant but not including the forced loc setting messes the behavior up.
+	//stop resting
+	resting = 0
+
+	// If we are being held, handle removing our holder from their inv.
+	var/obj/item/weapon/holder/H = loc
+	if(istype(H))
+		var/mob/living/M = H.loc
+		if(istype(M))
+			M.drop_from_inventory(H)
+		H.loc = get_turf(src)
+		src.loc = get_turf(H)
+
+	// Move us into the card and move the card to the ground.
 	src.loc = card
 	card.loc = get_turf(card)
 	src.forceMove(card)
 	card.forceMove(card.loc)
-	canmove = 0
+	canmove = 1
+	resting = 0
 	icon_state = "[chassis]"
-
-/mob/living/silicon/pai/start_pulling(var/atom/movable/AM)
-
-	if(istype(AM,/obj/item))
-		var/obj/item/O = AM
-		if(O.w_class == 1)
-			..()
-		else
-			src << "<span class='warning'>You are too small to pull that.</span>"
-	else
-		src << "<span class='warning'>You are too small to pull that.</span>"
-		return
 
 // No binary for pAIs.
 /mob/living/silicon/pai/binarycheck()
 	return 0
+
+// Handle being picked up.
+/mob/living/silicon/pai/get_scooped(var/mob/living/carbon/grabber, var/self_drop)
+	var/obj/item/weapon/holder/H = ..(grabber, self_drop)
+	if(!istype(H))
+		return
+	H.icon_state = "pai-[icon_state]"
+	grabber.update_inv_l_hand()
+	grabber.update_inv_r_hand()
+	return H
+
+/mob/living/silicon/pai/MouseDrop(atom/over_object)
+	var/mob/living/carbon/H = over_object
+	if(!istype(H) || !Adjacent(H)) return ..()
+	if(H.a_intent == "help")
+		get_scooped(H)
+		return
+	else
+		return ..()

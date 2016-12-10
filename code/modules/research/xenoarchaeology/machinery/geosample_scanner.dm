@@ -1,9 +1,10 @@
 
 /obj/machinery/radiocarbon_spectrometer
-	name = "Radiocarbon spectrometer"
+	name = "radiocarbon spectrometer"
 	desc = "A specialised, complex scanner for gleaning information on all manner of small things."
 	anchored = 1
 	density = 1
+	flags = OPENCONTAINER
 	icon = 'icons/obj/virology.dmi'
 	icon_state = "analyser"
 
@@ -91,9 +92,13 @@
 				user << "<span class='info'>You remove [amount_transferred]u of coolant from [src].</span>"
 				update_coolant()
 				return
+		if(scanned_item)
+			user << "<span class=warning>\The [src] already has \a [scanned_item] inside!</span>"
+			return
 		user.drop_item()
 		I.loc = src
 		scanned_item = I
+		user << "<span class=notice>You put \the [I] into \the [src].</span>"
 
 /obj/machinery/radiocarbon_spectrometer/proc/update_coolant()
 	var/total_purity = 0
@@ -144,15 +149,15 @@
 	data["radiation"] = round(radiation)
 	data["t_left_radspike"] = round(t_left_radspike)
 	data["rad_shield_on"] = rad_shield
-	
+
 	// update the ui if it exists, returns null if no ui is passed/found
-	ui = nanomanager.try_update_ui(user, src, ui_key, ui, data, force_open)	
+	ui = nanomanager.try_update_ui(user, src, ui_key, ui, data, force_open)
 	if (!ui)
 		// the ui does not exist, so we'll create a new() one
         // for a list of parameters and their descriptions see the code docs in \code\modules\nano\nanoui.dm
 		ui = new(user, src, ui_key, "geoscanner.tmpl", "High Res Radiocarbon Spectrometer", 900, 825)
 		// when the ui is first opened this is the data it will use
-		ui.set_initial_data(data)		
+		ui.set_initial_data(data)
 		// open the new ui window
 		ui.open()
 		// auto update every Master Controller tick
